@@ -1,0 +1,34 @@
+.app-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.app-header__inner {
+  width: min(1000px, 100% - 2rem);
+  margin: 0 auto;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-logo {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.app-nav a {
+  text-decoration: none;
+  color: #5f6368;
+}
+
+.app-nav a.is-active {
+  color: #1a73e8;
+  font-weight: 600;
+}

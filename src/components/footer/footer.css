@@ -1,0 +1,14 @@
+.app-footer {
+  background: #ffffff;
+  border-top: 1px solid #e8eaed;
+}
+
+.app-footer__inner {
+  width: min(1000px, 100% - 2rem);
+  margin: 0 auto;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  color: #5f6368;
+  font-size: 0.9rem;
+}
