@@ -1,4 +1,19 @@
 <section class="dashboard-page">
-  <h1>Dashboard</h1>
-  <p>This page is mapped to <strong>/dashboard</strong>.</p>
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <div>
+        <h1>Discover Users</h1>
+        <p class="dashboard-subtitle">Browse all registered members on Two2Two</p>
+      </div>
+    </div>
+
+    <div class="users-grid" data-users-grid>
+      <!-- Users will be loaded here -->
+      <div class="loading-message">Loading users...</div>
+    </div>
+
+    <div class="no-users-message" style="display: none;">
+      <p>No registered users found.</p>
+    </div>
+  </div>
 </section>
