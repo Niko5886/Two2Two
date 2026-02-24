@@ -1,6 +1,7 @@
 import { renderHomePage } from '../pages/index/index.js';
 import { renderDashboardPage } from '../pages/dashboard/dashboard.js';
 import { renderLoginPage } from '../pages/login/login.js';
+import { renderRegisterPage } from '../pages/register/register.js';
 import { renderAdminPage } from '../pages/admin/admin.js';
 
 export const appRoutes = [
@@ -19,7 +20,11 @@ export const appRoutes = [
     render: renderLoginPage,
     implemented: true
   },
-  { path: '/register', implemented: false },
+  {
+    path: '/register',
+    render: renderRegisterPage,
+    implemented: true
+  },
   { path: '/list-of-users', implemented: false },
   { path: '/messages', implemented: false },
   { path: '/search', implemented: false },

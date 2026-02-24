@@ -1,6 +1,6 @@
-import './login.css';
-import loginTemplate from './login.html?raw';
-import { signIn } from '../../services/supabaseClient.js';
+import './register.css';
+import registerTemplate from './register.html?raw';
+import { signUp } from '../../services/supabaseClient.js';
 
 function bindAuthForm(container) {
   const form = container.querySelector('[data-auth-form]');
@@ -14,36 +14,52 @@ function bindAuthForm(container) {
     const formData = new FormData(form);
     const email = formData.get('email');
     const password = formData.get('password');
+    const confirmPassword = formData.get('confirmPassword');
 
-    if (!email || !password) {
-      status.textContent = 'Please enter both email and password.';
+    // Validation
+    if (!email || !password || !confirmPassword) {
+      status.textContent = 'Please fill in all fields.';
+      status.className = 'auth-status auth-status--error';
+      return;
+    }
+
+    if (password.length < 6) {
+      status.textContent = 'Password must be at least 6 characters long.';
+      status.className = 'auth-status auth-status--error';
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      status.textContent = 'Passwords do not match.';
       status.className = 'auth-status auth-status--error';
       return;
     }
 
     // Disable form during submission
     submitButton.disabled = true;
-    submitButton.textContent = 'Signing in...';
-    status.textContent = 'Signing in...';
+    submitButton.textContent = 'Creating account...';
+    status.textContent = 'Creating your account...';
     status.className = 'auth-status';
 
-    const { data, error } = await signIn(email, password);
+    const { data, error } = await signUp(email, password);
 
     if (error) {
-      status.textContent = error.message || 'Failed to sign in. Please try again.';
+      status.textContent = error.message || 'Failed to create account. Please try again.';
       status.className = 'auth-status auth-status--error';
       submitButton.disabled = false;
       submitButton.textContent = originalButtonText;
       return;
     }
 
-    status.textContent = 'Login successful! Redirecting...';
+    // Success message
+    status.textContent = 'Account created successfully! Please check your email to verify your account.';
     status.className = 'auth-status auth-status--success';
+    form.reset();
     
-    // Redirect to dashboard after short delay
+    // Redirect to login after delay
     setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 1000);
+      window.location.href = '/login';
+    }, 2000);
   });
 }
 
@@ -54,6 +70,7 @@ function bindTestCredentials(container) {
   const userBtn = container.querySelector('[data-use-user]');
   const emailInput = container.querySelector('[name="email"]');
   const passwordInput = container.querySelector('[name="password"]');
+  const confirmPasswordInput = container.querySelector('[name="confirmPassword"]');
 
   // Toggle credentials visibility
   toggleBtn.addEventListener('click', (e) => {
@@ -69,6 +86,7 @@ function bindTestCredentials(container) {
     e.preventDefault();
     emailInput.value = 'nik@gmail.com';
     passwordInput.value = 'Password123!';
+    confirmPasswordInput.value = 'Password123!';
     emailInput.focus();
   });
 
@@ -77,13 +95,14 @@ function bindTestCredentials(container) {
     e.preventDefault();
     emailInput.value = 'maria@gmail.com';
     passwordInput.value = 'Password123!';
+    confirmPasswordInput.value = 'Password123!';
     emailInput.focus();
   });
 }
 
-export function renderLoginPage() {
+export function renderRegisterPage() {
   const wrapper = document.createElement('div');
-  wrapper.innerHTML = loginTemplate;
+  wrapper.innerHTML = registerTemplate;
   const page = wrapper.firstElementChild;
   bindAuthForm(page);
   bindTestCredentials(page);

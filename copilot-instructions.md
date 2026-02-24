@@ -41,3 +41,5 @@ After applying a migration in Supabase, keep a copy of the migration SQL file in
 Use Supabase Auth for user authentication and authorization.
 Implement RLS policies to restrict access to data based on user roles and permissions.
 Implement user roles with a separate DB table user_roles + enum roles (e.g. admin, user).
+
+## Отговаряй ми винаги на БЪЛГАРСКИ ЕЗИК , без значение на какъв език ти задавам въпрос или задача.

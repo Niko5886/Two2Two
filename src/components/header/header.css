@@ -10,25 +10,69 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  justify-content: space-between;
 }
 
 .app-logo {
   font-weight: 700;
   text-decoration: none;
+  min-width: fit-content;
 }
 
 .app-nav {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
+  flex: 1;
 }
 
 .app-nav a {
   text-decoration: none;
   color: #5f6368;
+  font-size: 0.9rem;
 }
 
 .app-nav a.is-active {
   color: #1a73e8;
   font-weight: 600;
 }
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: fit-content;
+}
+
+.auth-user-email {
+  font-size: 0.85rem;
+  color: #5f6368;
+  padding: 0 0.5rem;
+}
+
+.auth-link {
+  text-decoration: none;
+  color: #1a73e8;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.auth-link:hover {
+  color: #1557b0;
+}
+
+.auth-logout-btn {
+  background: #1a73e8;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.auth-logout-btn:hover {
+  background: #1557b0;}
