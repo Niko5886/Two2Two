@@ -1,0 +1,24 @@
+<section class="auth-page auth-page--admin">
+  <div class="auth-card">
+    <div class="auth-card__header">
+      <p class="auth-card__eyebrow">Restricted</p>
+      <h1>Admin Login</h1>
+      <p class="auth-card__subtitle">Sign in with your admin credentials to manage the platform.</p>
+    </div>
+
+    <form class="auth-form" data-auth-form>
+      <label class="auth-field">
+        <span>Admin email</span>
+        <input type="email" name="email" placeholder="admin@email.com" autocomplete="email" required />
+      </label>
+
+      <label class="auth-field">
+        <span>Password</span>
+        <input type="password" name="password" placeholder="Admin password" autocomplete="current-password" required />
+      </label>
+
+      <button class="auth-button" type="submit">Enter admin area</button>
+      <p class="auth-status" role="status" aria-live="polite" data-auth-status></p>
+    </form>
+  </div>
+</section>

@@ -1,0 +1,16 @@
+.auth-page--admin .auth-card {
+  border-color: #ecd3a3;
+  background: linear-gradient(145deg, #fffaf0 0%, #ffffff 80%);
+}
+
+.auth-page--admin .auth-card__eyebrow {
+  color: #8b5a10;
+}
+
+.auth-page--admin .auth-button {
+  background: #b86b12;
+}
+
+.auth-page--admin .auth-button:hover {
+  box-shadow: 0 12px 20px rgba(184, 107, 18, 0.25);
+}
