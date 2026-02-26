@@ -60,7 +60,10 @@ function renderProfileContent({ profile, photos }, isOwner, inEditMode = false) 
         ${renderGallery(photos, isOwner)}
       </div>
       ${isOwner ? '<div class="profile-upload"><input type="file" accept="image/*" data-photo-upload /><button data-action="upload-photo">Качи снимка</button><small>Макс 5MB</small></div>' : ''}
-      ${isOwner ? '<div class="profile-actions"><button data-action="toggle-edit">Редактирай профил</button></div>' : ''}
+      <div class="profile-actions">
+        <button data-action="toggle-edit" ${isOwner ? '' : 'disabled'}>Редактирай профил</button>
+        ${isOwner ? '' : '<small class="profile-edit-hint">Само за собствения профил</small>'}
+      </div>
     `;
   }
 
@@ -150,6 +153,12 @@ async function handleActions(modalEl, userId) {
     
     try {
       if (action === 'toggle-edit') {
+        if (!isOwner) {
+          const statusEl = modalEl.querySelector('[data-status]');
+          statusEl.textContent = 'Можеш да редактираш само своя профил.';
+          statusEl.classList.add('profile-status--error');
+          return;
+        }
         editMode = true;
         await loadProfile(modalEl, userId, isOwner, true);
         attachFormHandlers(modalEl, userId);

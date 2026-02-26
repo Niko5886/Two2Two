@@ -113,7 +113,7 @@ export function createHeader(router, activePath) {
       e.preventDefault();
       const user = getAuthUser();
       if (!user) return;
-      openProfileModal(user.id, { title: 'My Profile' });
+      openProfileModal(user.id, { title: 'Моят профил' });
     });
   }
 

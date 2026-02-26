@@ -201,6 +201,12 @@
   transition: background 0.2s;
 }
 
+.profile-actions button:disabled {
+  background: #e8eaed;
+  color: #9aa0a6;
+  cursor: not-allowed;
+}
+
 .profile-actions--edit {
   justify-content: space-between;
 }
@@ -236,4 +242,14 @@ button[data-action="toggle-edit"] {
 
 button[data-action="toggle-edit"]:hover {
   background: #1557b0;
+}
+
+.profile-actions button[data-action="toggle-edit"]:disabled:hover {
+  background: #e8eaed;
+}
+
+.profile-edit-hint {
+  align-self: center;
+  color: #5f6368;
+  font-size: 0.85rem;
 }
