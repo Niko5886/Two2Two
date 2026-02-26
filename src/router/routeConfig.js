@@ -33,10 +33,9 @@ export const appRoutes = [
     protected: false,
     requiredRole: null
   },
-  { path: '/list-of-users', implemented: false, protected: true, requiredRole: null },
+  { path: '/users', implemented: false, protected: true, requiredRole: null },
   { path: '/messages', implemented: false, protected: true, requiredRole: null },
   { path: '/search', implemented: false, protected: true, requiredRole: null },
-  { path: '/private-messages', implemented: false, protected: true, requiredRole: null },
   { path: '/friends', implemented: false, protected: true, requiredRole: null },
   {
     path: '/admin',

@@ -17,10 +17,17 @@ a {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  padding-top: 64px;
 }
 
 .app-content {
   width: min(1000px, 100% - 2rem);
   margin: 1.5rem auto;
+  margin-left: calc(240px + 1.5rem);
   flex: 1;
+}
+
+/* Adjust content when sidebar is hidden */
+.app-shell:not(:has(.app-sidebar[style*="display: block"])) .app-content {
+  margin-left: auto;
 }

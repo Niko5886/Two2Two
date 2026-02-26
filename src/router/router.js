@@ -22,7 +22,8 @@ function renderLayout(contentNode, activePath) {
   const shell = document.createElement('div');
   shell.className = 'app-shell';
 
-  shell.append(createHeader(router, activePath));
+  const headerFragment = createHeader(router, activePath);
+  shell.append(headerFragment);
 
   const content = document.createElement('main');
   content.className = 'app-content';

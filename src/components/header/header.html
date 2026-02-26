@@ -1,16 +1,39 @@
 <header class="app-header">
   <div class="app-header__inner">
     <a class="app-logo" href="/" data-nav-link>Two2Two</a>
-    <nav class="app-nav" aria-label="Main navigation">
-      <a href="/" data-nav-link data-protected>Home</a>
-      <a href="/dashboard" data-nav-link data-protected>Dashboard</a>
-      <a href="/list-of-users" data-nav-link data-protected>Users</a>
-      <a href="/messages" data-nav-link data-protected>Messages</a>
-      <a href="/search" data-nav-link data-protected>Search</a>
-      <a href="/private-messages" data-nav-link data-protected>Private Messages</a>
-      <a href="/friends" data-nav-link data-protected>Friends</a>
-      <a href="/admin" data-nav-link data-protected data-admin-only>Admin</a>
-    </nav>
     <div class="app-header__actions" data-auth-actions></div>
   </div>
 </header>
+
+<aside class="app-sidebar" data-sidebar>
+  <nav class="app-sidebar__nav" aria-label="Main navigation">
+    <a href="/" class="app-sidebar__link" data-nav-link data-protected>
+      <span class="app-sidebar__icon">🏠</span>
+      <span class="app-sidebar__text">Начало</span>
+    </a>
+    <a href="/dashboard" class="app-sidebar__link" data-nav-link data-protected>
+      <span class="app-sidebar__icon">📊</span>
+      <span class="app-sidebar__text">Dashboard</span>
+    </a>
+    <a href="/users" class="app-sidebar__link" data-nav-link data-protected>
+      <span class="app-sidebar__icon">👥</span>
+      <span class="app-sidebar__text">Users</span>
+    </a>
+    <a href="/messages" class="app-sidebar__link" data-nav-link data-protected>
+      <span class="app-sidebar__icon">✉️</span>
+      <span class="app-sidebar__text">Messages</span>
+    </a>
+    <a href="/search" class="app-sidebar__link" data-nav-link data-protected>
+      <span class="app-sidebar__icon">🔍</span>
+      <span class="app-sidebar__text">Search</span>
+    </a>
+    <a href="/friends" class="app-sidebar__link" data-nav-link data-protected>
+      <span class="app-sidebar__icon">❤️</span>
+      <span class="app-sidebar__text">Friends</span>
+    </a>
+    <a href="/admin" class="app-sidebar__link" data-nav-link data-protected data-admin-only>
+      <span class="app-sidebar__icon">⚙️</span>
+      <span class="app-sidebar__text">Admin</span>
+    </a>
+  </nav>
+</aside>

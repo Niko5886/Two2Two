@@ -7,9 +7,10 @@ export function createHeader(router, activePath) {
   const wrapper = document.createElement('div');
   wrapper.innerHTML = headerTemplate;
 
-  const header = wrapper.firstElementChild;
-  const links = header.querySelectorAll('[data-nav-link]');
-  const authActions = header.querySelector('[data-auth-actions]');
+  const header = wrapper.querySelector('.app-header');
+  const sidebar = wrapper.querySelector('.app-sidebar');
+  const links = wrapper.querySelectorAll('[data-nav-link]');
+  const authActions = wrapper.querySelector('[data-auth-actions]');
 
   // Handle regular navigation links
   links.forEach((link) => {
@@ -31,21 +32,26 @@ export function createHeader(router, activePath) {
   // Update auth actions based on auth state
   async function updateAuthActions(user) {
     // Update protected links visibility
-    const protectedLinks = header.querySelectorAll('[data-protected]:not([data-admin-only])');
+    const protectedLinks = wrapper.querySelectorAll('[data-protected]:not([data-admin-only])');
     protectedLinks.forEach((link) => {
-      link.style.display = user ? 'inline-block' : 'none';
+      link.style.display = user ? 'flex' : 'none';
     });
 
-    const adminOnlyLinks = header.querySelectorAll('[data-admin-only]');
+    const adminOnlyLinks = wrapper.querySelectorAll('[data-admin-only]');
     if (user) {
       const isAdmin = await userHasRole('admin');
       adminOnlyLinks.forEach((link) => {
-        link.style.display = isAdmin ? 'inline-block' : 'none';
+        link.style.display = isAdmin ? 'flex' : 'none';
       });
     } else {
       adminOnlyLinks.forEach((link) => {
         link.style.display = 'none';
       });
+    }
+
+    // Show/hide sidebar based on auth
+    if (sidebar) {
+      sidebar.style.display = user ? 'block' : 'none';
     }
 
     if (authActions) {
@@ -100,5 +106,11 @@ export function createHeader(router, activePath) {
   });
   updateAuthActions(getAuthUser());
 
-  return header;
+  // Return a fragment with both header and sidebar
+  const fragment = document.createDocumentFragment();
+  fragment.append(header);
+  if (sidebar) {
+    fragment.append(sidebar);
+  }
+  return fragment;
 }
