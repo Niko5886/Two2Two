@@ -40,11 +40,30 @@ function renderGallery(photos, isOwner) {
     .join('');
 }
 
+function getPrimaryPhotoUrl(photos, profile) {
+  const primary = photos?.find((photo) => photo.is_primary);
+  return primary?.photo_url || profile?.avatar_url || '';
+}
+
 function renderProfileContent({ profile, photos }, isOwner, inEditMode = false) {
   const age = calculateAge(profile?.birth_date);
+  const primaryPhotoUrl = getPrimaryPhotoUrl(photos, profile);
+  const avatarMarkup = primaryPhotoUrl
+    ? `<img src="${primaryPhotoUrl}" class="profile-avatar__img" alt="Profile avatar" />`
+    : '<div class="profile-avatar__placeholder">?</div>';
+  const heroMarkup = `
+    <div class="profile-hero">
+      <div class="profile-avatar">${avatarMarkup}</div>
+      <div class="profile-hero__info">
+        <div class="profile-hero__name">${profile?.username || 'Профил'}</div>
+        <div class="profile-hero__meta">${profile?.city || '—'}${age ? `, ${age} г.` : ''}</div>
+      </div>
+    </div>
+  `;
   
   if (!inEditMode) {
     return `
+      ${heroMarkup}
       <div class="profile-meta">
         <div class="profile-field"><label>Град</label><span>${profile?.city || '—'}</span></div>
         <div class="profile-field"><label>Пол</label><span>${profile?.gender || '—'}</span></div>
@@ -73,6 +92,7 @@ function renderProfileContent({ profile, photos }, isOwner, inEditMode = false) 
   
   return `
     <form class="profile-edit-form" data-profile-form>
+      ${heroMarkup}
       <div class="profile-field">
         <label>Град</label>
         <input type="text" name="city" value="${profile?.city || ''}" placeholder="София" />
@@ -170,7 +190,11 @@ async function handleActions(modalEl, userId) {
       if (action === 'upload-photo') {
         const fileInput = modalEl.querySelector('[data-photo-upload]');
         const file = fileInput?.files?.[0];
-        if (!file) return;
+        if (!fileInput) return;
+        if (!file) {
+          fileInput.click();
+          return;
+        }
         await uploadProfilePhoto(userId, file, { setPrimary: true });
         await loadProfile(modalEl, userId, isOwner, editMode);
         if (editMode) attachFormHandlers(modalEl, userId);
@@ -190,6 +214,24 @@ async function handleActions(modalEl, userId) {
     } catch (err) {
       const statusEl = modalEl.querySelector('[data-status]');
       statusEl.textContent = err.message || 'Грешка при действие';
+      statusEl.classList.add('profile-status--error');
+    }
+  });
+
+  modalEl.addEventListener('change', async (e) => {
+    if (!isOwner) return;
+    const target = e.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    if (!target.matches('[data-photo-upload]')) return;
+    const file = target.files?.[0];
+    if (!file) return;
+    try {
+      await uploadProfilePhoto(userId, file, { setPrimary: true });
+      await loadProfile(modalEl, userId, isOwner, editMode);
+      if (editMode) attachFormHandlers(modalEl, userId);
+    } catch (err) {
+      const statusEl = modalEl.querySelector('[data-status]');
+      statusEl.textContent = err.message || 'Грешка при качване на снимка';
       statusEl.classList.add('profile-status--error');
     }
   });

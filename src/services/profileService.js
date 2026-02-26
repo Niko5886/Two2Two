@@ -57,7 +57,10 @@ export async function updateProfile(userId, payload) {
 export async function uploadProfilePhoto(userId, file, { setPrimary = false } = {}) {
   assertFileSize(file);
   const fileExt = file.name.split('.').pop();
-  const filePath = `${userId}/${crypto.randomUUID()}.${fileExt}`;
+  const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const filePath = `${userId}/${uuid}.${fileExt}`;
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
@@ -85,12 +88,26 @@ export async function uploadProfilePhoto(userId, file, { setPrimary = false } = 
       .update({ is_primary: false })
       .eq('user_id', userId)
       .neq('id', data.id);
+
+    await supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', userId);
   }
 
   return data;
 }
 
 export async function setPrimaryPhoto(userId, photoId) {
+  const { data: photo, error: photoError } = await supabase
+    .from('profile_photos')
+    .select('id, photo_url')
+    .eq('id', photoId)
+    .eq('user_id', userId)
+    .single();
+
+  if (photoError) throw photoError;
+
   const { error } = await supabase
     .from('profile_photos')
     .update({ is_primary: true })
@@ -104,15 +121,57 @@ export async function setPrimaryPhoto(userId, photoId) {
     .update({ is_primary: false })
     .eq('user_id', userId)
     .neq('id', photoId);
+
+  await supabase
+    .from('profiles')
+    .update({ avatar_url: photo.photo_url })
+    .eq('id', userId);
 }
 
 export async function deletePhoto(userId, photoId) {
+  const { data: photo, error: photoError } = await supabase
+    .from('profile_photos')
+    .select('id, photo_url, is_primary')
+    .eq('id', photoId)
+    .eq('user_id', userId)
+    .single();
+
+  if (photoError) throw photoError;
+
   const { error } = await supabase
     .from('profile_photos')
     .delete()
     .eq('id', photoId)
     .eq('user_id', userId);
   if (error) throw error;
+
+  if (photo.is_primary) {
+    const { data: nextPhoto } = await supabase
+      .from('profile_photos')
+      .select('id, photo_url')
+      .eq('user_id', userId)
+      .order('uploaded_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (nextPhoto?.id) {
+      await supabase
+        .from('profile_photos')
+        .update({ is_primary: true })
+        .eq('id', nextPhoto.id)
+        .eq('user_id', userId);
+
+      await supabase
+        .from('profiles')
+        .update({ avatar_url: nextPhoto.photo_url })
+        .eq('id', userId);
+    } else {
+      await supabase
+        .from('profiles')
+        .update({ avatar_url: null })
+        .eq('id', userId);
+    }
+  }
 }
 
 export async function markLastSeen() {
