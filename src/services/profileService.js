@@ -23,7 +23,7 @@ export async function fetchProfile(userId) {
 export async function fetchProfileWithPhotos(userId) {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*, profile_photos(*), user_roles(role)')
+    .select('*')
     .eq('id', userId)
     .maybeSingle();
 

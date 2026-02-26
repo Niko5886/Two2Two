@@ -6,10 +6,12 @@ import {
   setPrimaryPhoto,
   deletePhoto,
   calculateAge,
-  formatLastSeen
+  formatLastSeen,
+  updateProfile
 } from '../../services/profileService.js';
 
 let activeModal = null;
+let editMode = false;
 
 function renderTags(tags) {
   if (!tags || !tags.length) return '<span>—</span>';
@@ -38,36 +40,101 @@ function renderGallery(photos, isOwner) {
     .join('');
 }
 
-function renderProfileContent({ profile, photos }, isOwner) {
+function renderProfileContent({ profile, photos }, isOwner, inEditMode = false) {
   const age = calculateAge(profile?.birth_date);
+  
+  if (!inEditMode) {
+    return `
+      <div class="profile-meta">
+        <div class="profile-field"><label>Град</label><span>${profile?.city || '—'}</span></div>
+        <div class="profile-field"><label>Пол</label><span>${profile?.gender || '—'}</span></div>
+        <div class="profile-field"><label>Години</label><span>${age || '—'}</span></div>
+        <div class="profile-field"><label>Тегло</label><span>${profile?.weight_kg ? profile.weight_kg + ' кг' : '—'}</span></div>
+        <div class="profile-field"><label>Ръст</label><span>${profile?.height_cm ? profile.height_cm + ' см' : '—'}</span></div>
+        <div class="profile-field"><label>Какво търси</label><div class="profile-tags">${renderTags(profile?.looking_for)}</div></div>
+        <div class="profile-field"><label>Фетиши</label><div class="profile-tags">${renderTags(profile?.fetishes)}</div></div>
+        <div class="profile-field"><label>Последно онлайн</label><span>${formatLastSeen(profile?.last_seen_at)}</span></div>
+        <div class="profile-field"><label>18+ верификация</label><span>${profile?.is_verified_18_plus ? 'Да' : 'Не'}</span></div>
+      </div>
+      <div class="profile-gallery">
+        ${renderGallery(photos, isOwner)}
+      </div>
+      ${isOwner ? '<div class="profile-upload"><input type="file" accept="image/*" data-photo-upload /><button data-action="upload-photo">Качи снимка</button><small>Макс 5MB</small></div>' : ''}
+      ${isOwner ? '<div class="profile-actions"><button data-action="toggle-edit">Редактирай профил</button></div>' : ''}
+    `;
+  }
+
+  // Edit mode
+  const lookingForOptions = ['двойки', 'мъже', 'жени', 'групи', 'свинг партита'];
+  const lookingForChecked = profile?.looking_for || [];
+  
   return `
-    <div class="profile-meta">
-      <div class="profile-field"><label>Град</label><span>${profile?.city || '—'}</span></div>
-      <div class="profile-field"><label>Пол</label><span>${profile?.gender || '—'}</span></div>
-      <div class="profile-field"><label>Години</label><span>${age || '—'}</span></div>
-      <div class="profile-field"><label>Тегло</label><span>${profile?.weight_kg ? profile.weight_kg + ' кг' : '—'}</span></div>
-      <div class="profile-field"><label>Ръст</label><span>${profile?.height_cm ? profile.height_cm + ' см' : '—'}</span></div>
-      <div class="profile-field"><label>Какво търси</label><div class="profile-tags">${renderTags(profile?.looking_for)}</div></div>
-      <div class="profile-field"><label>Фетиши</label><div class="profile-tags">${renderTags(profile?.fetishes)}</div></div>
-      <div class="profile-field"><label>Последно онлайн</label><span>${formatLastSeen(profile?.last_seen_at)}</span></div>
-      <div class="profile-field"><label>18+ верификация</label><span>${profile?.is_verified_18_plus ? 'Да' : 'Не'}</span></div>
-    </div>
-    <div class="profile-gallery">
-      ${renderGallery(photos, isOwner)}
-    </div>
-    ${isOwner ? '<div class="profile-upload"><input type="file" accept="image/*" data-photo-upload /><button data-action="upload-photo">Качи снимка</button><small>Макс 5MB</small></div>' : ''}
+    <form class="profile-edit-form" data-profile-form>
+      <div class="profile-field">
+        <label>Град</label>
+        <input type="text" name="city" value="${profile?.city || ''}" placeholder="София" />
+      </div>
+      <div class="profile-field">
+        <label>Пол</label>
+        <select name="gender">
+          <option value="">Избери...</option>
+          <option value="male" ${profile?.gender === 'male' ? 'selected' : ''}>Мъж</option>
+          <option value="female" ${profile?.gender === 'female' ? 'selected' : ''}>Жена</option>
+          <option value="couple" ${profile?.gender === 'couple' ? 'selected' : ''}>Двойка</option>
+        </select>
+      </div>
+      <div class="profile-field">
+        <label>Рождена дата</label>
+        <input type="date" name="birth_date" value="${profile?.birth_date || ''}" />
+      </div>
+      <div class="profile-field">
+        <label>Тегло (кг)</label>
+        <input type="number" name="weight_kg" value="${profile?.weight_kg || ''}" placeholder="70" min="30" max="300" />
+      </div>
+      <div class="profile-field">
+        <label>Ръст (см)</label>
+        <input type="number" name="height_cm" value="${profile?.height_cm || ''}" placeholder="170" min="100" max="250" />
+      </div>
+      <div class="profile-field profile-field--wide">
+        <label>Какво търси</label>
+        <div class="checkbox-group">
+          ${lookingForOptions.map(opt => `
+            <label class="checkbox-label">
+              <input type="checkbox" name="looking_for" value="${opt}" ${lookingForChecked.includes(opt) ? 'checked' : ''} />
+              ${opt}
+            </label>
+          `).join('')}
+        </div>
+      </div>
+      <div class="profile-field profile-field--wide">
+        <label>Фетиши (разделени със запетая)</label>
+        <textarea name="fetishes" rows="3" placeholder="бондаж, ролеви игри, ...">${(profile?.fetishes || []).join(', ')}</textarea>
+      </div>
+      <div class="profile-gallery">
+        ${renderGallery(photos, isOwner)}
+      </div>
+      ${isOwner ? `<div class="profile-upload">
+        <input type="file" accept="image/*" data-photo-upload />
+        <button type="button" data-action="upload-photo">Качи снимка</button>
+        <small>Макс 5MB</small>
+      </div>` : ''}
+      <div class="profile-actions profile-actions--edit">
+        <button type="submit" class="btn-primary">Запази</button>
+        <button type="button" data-action="cancel-edit" class="btn-secondary">Отказ</button>
+      </div>
+    </form>
   `;
 }
 
-async function loadProfile(modalEl, userId, isOwner) {
+async function loadProfile(modalEl, userId, isOwner, inEditMode = false) {
   const statusEl = modalEl.querySelector('[data-status]');
   const contentEl = modalEl.querySelector('[data-content]');
   statusEl.textContent = 'Зареждане...';
   statusEl.classList.remove('profile-status--error');
   try {
     const data = await fetchProfileWithPhotos(userId);
-    statusEl.textContent = 'Профилът е зареден';
-    contentEl.innerHTML = renderProfileContent(data, isOwner);
+    statusEl.textContent = inEditMode ? 'Режим редактиране' : 'Профилът е зареден';
+    contentEl.innerHTML = renderProfileContent(data, isOwner, inEditMode);
   } catch (err) {
     statusEl.textContent = err.message || 'Грешка при зареждане на профила';
     statusEl.classList.add('profile-status--error');
@@ -76,30 +143,92 @@ async function loadProfile(modalEl, userId, isOwner) {
 
 async function handleActions(modalEl, userId) {
   const isOwner = getAuthUser()?.id === userId;
+  
   modalEl.addEventListener('click', async (e) => {
     const action = e.target.dataset.action;
     if (!action) return;
+    
     try {
+      if (action === 'toggle-edit') {
+        editMode = true;
+        await loadProfile(modalEl, userId, isOwner, true);
+        attachFormHandlers(modalEl, userId);
+      }
+      if (action === 'cancel-edit') {
+        editMode = false;
+        await loadProfile(modalEl, userId, isOwner, false);
+      }
       if (action === 'upload-photo') {
         const fileInput = modalEl.querySelector('[data-photo-upload]');
         const file = fileInput?.files?.[0];
         if (!file) return;
         await uploadProfilePhoto(userId, file, { setPrimary: true });
-        await loadProfile(modalEl, userId, isOwner);
+        await loadProfile(modalEl, userId, isOwner, editMode);
+        if (editMode) attachFormHandlers(modalEl, userId);
       }
       if (action === 'set-primary') {
         const photoId = e.target.dataset.photoId;
         await setPrimaryPhoto(userId, photoId);
-        await loadProfile(modalEl, userId, isOwner);
+        await loadProfile(modalEl, userId, isOwner, editMode);
+        if (editMode) attachFormHandlers(modalEl, userId);
       }
       if (action === 'delete-photo') {
         const photoId = e.target.dataset.photoId;
         await deletePhoto(userId, photoId);
-        await loadProfile(modalEl, userId, isOwner);
+        await loadProfile(modalEl, userId, isOwner, editMode);
+        if (editMode) attachFormHandlers(modalEl, userId);
       }
     } catch (err) {
       const statusEl = modalEl.querySelector('[data-status]');
       statusEl.textContent = err.message || 'Грешка при действие';
+      statusEl.classList.add('profile-status--error');
+    }
+  });
+}
+
+function attachFormHandlers(modalEl, userId) {
+  const isOwner = getAuthUser()?.id === userId;
+  const form = modalEl.querySelector('[data-profile-form]');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const statusEl = modalEl.querySelector('[data-status]');
+    
+    try {
+      const formData = new FormData(form);
+      const lookingFor = formData.getAll('looking_for');
+      const fetishesRaw = formData.get('fetishes') || '';
+      const fetishes = fetishesRaw.split(',').map(f => f.trim()).filter(Boolean);
+      
+      const payload = {
+        city: formData.get('city') || null,
+        gender: formData.get('gender') || null,
+        birth_date: formData.get('birth_date') || null,
+        weight_kg: formData.get('weight_kg') ? parseInt(formData.get('weight_kg'), 10) : null,
+        height_cm: formData.get('height_cm') ? parseInt(formData.get('height_cm'), 10) : null,
+        looking_for: lookingFor.length > 0 ? lookingFor : null,
+        fetishes: fetishes.length > 0 ? fetishes : null
+      };
+
+      // Validate age 18+
+      if (payload.birth_date) {
+        const age = calculateAge(payload.birth_date);
+        if (age < 18) {
+          throw new Error('Трябва да си навършил 18 години');
+        }
+      }
+
+      statusEl.textContent = 'Записване...';
+      await updateProfile(userId, payload);
+      statusEl.textContent = 'Профилът е обновен успешно!';
+      editMode = false;
+      
+      setTimeout(() => {
+        loadProfile(modalEl, userId, isOwner, false);
+      }, 1000);
+    } catch (err) {
+      statusEl.textContent = err.message || 'Грешка при записване';
       statusEl.classList.add('profile-status--error');
     }
   });
@@ -111,6 +240,7 @@ export async function openProfileModal(userId, { title = 'Профил', closabl
     activeModal = null;
   }
 
+  editMode = false; // Reset edit mode when opening modal
   const currentUser = getAuthUser();
   const isOwner = currentUser && currentUser.id === userId;
 
