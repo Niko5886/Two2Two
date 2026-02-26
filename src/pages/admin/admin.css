@@ -1,16 +1,51 @@
-.auth-page--admin .auth-card {
-  border-color: #ecd3a3;
-  background: linear-gradient(145deg, #fffaf0 0%, #ffffff 80%);
+.admin-page {
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 220px);
 }
 
-.auth-page--admin .auth-card__eyebrow {
+.admin-card {
+  width: min(680px, 100%);
+  background: #ffffff;
+  border: 1px solid #ecd3a3;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.admin-eyebrow {
+  margin: 0 0 0.5rem;
   color: #8b5a10;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.auth-page--admin .auth-button {
-  background: #b86b12;
+.admin-card h1 {
+  margin: 0;
 }
 
-.auth-page--admin .auth-button:hover {
-  box-shadow: 0 12px 20px rgba(184, 107, 18, 0.25);
+.admin-subtitle {
+  margin: 0.5rem 0 1rem;
+  color: #5f6368;
+}
+
+.admin-status {
+  margin: 0 0 1rem;
+  color: #5f6368;
+}
+
+.admin-status--success {
+  color: #136f3a;
+  font-weight: 600;
+}
+
+.admin-content {
+  border-top: 1px solid #e8eaed;
+  padding-top: 1rem;
+}
+
+.admin-content p {
+  margin: 0.5rem 0;
 }

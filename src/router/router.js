@@ -2,7 +2,7 @@ import Navigo from 'navigo';
 import { appRoutes } from './routeConfig.js';
 import { createHeader } from '../components/header/header.js';
 import { createFooter } from '../components/footer/footer.js';
-import { isAuthenticated } from '../services/authState.js';
+import { isAuthenticated, userHasRole } from '../services/authState.js';
 
 export const router = new Navigo('/');
 
@@ -35,12 +35,20 @@ function renderLayout(contentNode, activePath) {
 
 export function initializeRouter() {
   appRoutes.forEach((route) => {
-    router.on(route.path, () => {
+    router.on(route.path, async () => {
       // Check if route is protected
       if (route.protected && !isAuthenticated()) {
         // Redirect to login if not authenticated
         router.navigate('/login');
         return;
+      }
+
+      if (route.requiredRole) {
+        const hasRequiredRole = await userHasRole(route.requiredRole);
+        if (!hasRequiredRole) {
+          router.navigate('/dashboard');
+          return;
+        }
       }
 
       if (route.implemented && route.render) {

@@ -1,30 +1,37 @@
-import '../login/login.css';
 import './admin.css';
 import adminTemplate from './admin.html?raw';
+import { getAuthUser, userHasRole } from '../../services/authState.js';
+import { router } from '../../router/router.js';
 
-function bindAuthForm(container) {
-  const form = container.querySelector('[data-auth-form]');
-  const status = container.querySelector('[data-auth-status]');
+async function initializeAdminPanel(container) {
+  const status = container.querySelector('[data-admin-status]');
+  const content = container.querySelector('[data-admin-content]');
+  const adminEmail = container.querySelector('[data-admin-email]');
 
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const formData = new FormData(form);
-    const email = formData.get('email');
-    const password = formData.get('password');
+  const currentUser = getAuthUser();
 
-    if (!email || !password) {
-      status.textContent = 'Please enter both admin email and password.';
-      return;
-    }
+  if (!currentUser) {
+    router.navigate('/login');
+    return;
+  }
 
-    status.textContent = 'Admin login submitted. Verifying access...';
-  });
+  const isAdmin = await userHasRole('admin');
+  if (!isAdmin) {
+    router.navigate('/dashboard');
+    return;
+  }
+
+  adminEmail.textContent = currentUser.email || 'unknown';
+  status.textContent = 'Admin access verified.';
+  status.className = 'admin-status admin-status--success';
+  content.hidden = false;
 }
 
 export function renderAdminPage() {
   const wrapper = document.createElement('div');
   wrapper.innerHTML = adminTemplate;
   const page = wrapper.firstElementChild;
-  bindAuthForm(page);
+
+  initializeAdminPanel(page);
   return page;
 }

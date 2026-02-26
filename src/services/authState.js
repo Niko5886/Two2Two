@@ -2,6 +2,7 @@ import { supabase, setAuthStateCallback, getCurrentUser } from './supabaseClient
 
 // Auth state
 let currentUser = null;
+let currentUserRoles = [];
 let isAuthInitialized = false;
 
 // Callbacks
@@ -13,11 +14,13 @@ export async function initializeAuth() {
 
   const { user } = await getCurrentUser();
   currentUser = user;
+  await refreshUserRoles();
   isAuthInitialized = true;
 
   // Set up listener for future changes
-  setAuthStateCallback((event, session) => {
+  setAuthStateCallback(async (event, session) => {
     currentUser = session?.user || null;
+    await refreshUserRoles();
     notifyListeners();
   });
 
@@ -32,6 +35,22 @@ export function getAuthUser() {
 // Check if user is authenticated
 export function isAuthenticated() {
   return currentUser !== null;
+}
+
+export function getAuthUserRoles() {
+  return currentUserRoles;
+}
+
+export async function userHasRole(role) {
+  if (!currentUser) {
+    return false;
+  }
+
+  if (!currentUserRoles.length) {
+    await refreshUserRoles();
+  }
+
+  return currentUserRoles.includes(role);
 }
 
 // Subscribe to auth changes
@@ -59,6 +78,27 @@ function notifyListeners() {
 export async function refreshUser() {
   const { user } = await getCurrentUser();
   currentUser = user;
+  await refreshUserRoles();
   notifyListeners();
   return currentUser;
+}
+
+async function refreshUserRoles() {
+  if (!currentUser) {
+    currentUserRoles = [];
+    return currentUserRoles;
+  }
+
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', currentUser.id);
+
+  if (error) {
+    currentUserRoles = [];
+    return currentUserRoles;
+  }
+
+  currentUserRoles = (data || []).map((item) => item.role);
+  return currentUserRoles;
 }

@@ -1,6 +1,6 @@
 import './header.css';
 import headerTemplate from './header.html?raw';
-import { isAuthenticated, onAuthStateChange } from '../../services/authState.js';
+import { getAuthUser, onAuthStateChange, userHasRole } from '../../services/authState.js';
 import { signOut } from '../../services/supabaseClient.js';
 
 export function createHeader(router, activePath) {
@@ -29,12 +29,24 @@ export function createHeader(router, activePath) {
   });
 
   // Update auth actions based on auth state
-  function updateAuthActions(user) {
+  async function updateAuthActions(user) {
     // Update protected links visibility
-    const protectedLinks = header.querySelectorAll('[data-protected]');
-    protectedLinks.forEach(link => {
+    const protectedLinks = header.querySelectorAll('[data-protected]:not([data-admin-only])');
+    protectedLinks.forEach((link) => {
       link.style.display = user ? 'inline-block' : 'none';
     });
+
+    const adminOnlyLinks = header.querySelectorAll('[data-admin-only]');
+    if (user) {
+      const isAdmin = await userHasRole('admin');
+      adminOnlyLinks.forEach((link) => {
+        link.style.display = isAdmin ? 'inline-block' : 'none';
+      });
+    } else {
+      adminOnlyLinks.forEach((link) => {
+        link.style.display = 'none';
+      });
+    }
 
     if (authActions) {
       authActions.innerHTML = '';
@@ -83,7 +95,10 @@ export function createHeader(router, activePath) {
   }
 
   // Subscribe to auth state changes
-  onAuthStateChange(updateAuthActions);
+  onAuthStateChange((user) => {
+    updateAuthActions(user);
+  });
+  updateAuthActions(getAuthUser());
 
   return header;
 }
