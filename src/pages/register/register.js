@@ -1,6 +1,7 @@
 import './register.css';
 import registerTemplate from './register.html?raw';
 import { signUp } from '../../services/supabaseClient.js';
+import { router } from '../../router/router.js';
 
 function bindAuthForm(container) {
   const form = container.querySelector('[data-auth-form]');
@@ -58,7 +59,7 @@ function bindAuthForm(container) {
     
     // Redirect to login after delay
     setTimeout(() => {
-      window.location.href = '/login';
+      router.navigate('/login');
     }, 2000);
   });
 }

@@ -2,8 +2,9 @@ import Navigo from 'navigo';
 import { appRoutes } from './routeConfig.js';
 import { createHeader } from '../components/header/header.js';
 import { createFooter } from '../components/footer/footer.js';
+import { isAuthenticated } from '../services/authState.js';
 
-const router = new Navigo('/');
+export const router = new Navigo('/');
 
 function createComingSoon(path) {
   const section = document.createElement('section');
@@ -34,14 +35,19 @@ function renderLayout(contentNode, activePath) {
 
 export function initializeRouter() {
   appRoutes.forEach((route) => {
-    if (route.implemented && route.render) {
-      router.on(route.path, () => {
-        renderLayout(route.render(), route.path);
-      });
-      return;
-    }
-
     router.on(route.path, () => {
+      // Check if route is protected
+      if (route.protected && !isAuthenticated()) {
+        // Redirect to login if not authenticated
+        router.navigate('/login');
+        return;
+      }
+
+      if (route.implemented && route.render) {
+        renderLayout(route.render(), route.path);
+        return;
+      }
+
       renderLayout(createComingSoon(route.path), route.path);
     });
   });

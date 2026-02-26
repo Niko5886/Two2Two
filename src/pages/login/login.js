@@ -1,6 +1,8 @@
 import './login.css';
 import loginTemplate from './login.html?raw';
 import { signIn } from '../../services/supabaseClient.js';
+import { refreshUser } from '../../services/authState.js';
+import { router } from '../../router/router.js';
 
 function bindAuthForm(container) {
   const form = container.querySelector('[data-auth-form]');
@@ -40,10 +42,13 @@ function bindAuthForm(container) {
     status.textContent = 'Login successful! Redirecting...';
     status.className = 'auth-status auth-status--success';
     
-    // Redirect to dashboard after short delay
+    // Refresh auth state and redirect to dashboard
+    await refreshUser();
+    
+    // Navigate to dashboard
     setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 1000);
+      router.navigate('/dashboard');
+    }, 500);
   });
 }
 

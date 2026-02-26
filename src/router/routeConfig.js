@@ -8,31 +8,36 @@ export const appRoutes = [
   {
     path: '/',
     render: renderHomePage,
-    implemented: true
+    implemented: true,
+    protected: true
   },
   {
     path: '/dashboard',
     render: renderDashboardPage,
-    implemented: true
+    implemented: true,
+    protected: true
   },
   {
     path: '/login',
     render: renderLoginPage,
-    implemented: true
+    implemented: true,
+    protected: false
   },
   {
     path: '/register',
     render: renderRegisterPage,
-    implemented: true
+    implemented: true,
+    protected: false
   },
-  { path: '/list-of-users', implemented: false },
-  { path: '/messages', implemented: false },
-  { path: '/search', implemented: false },
-  { path: '/private-messages', implemented: false },
-  { path: '/friends', implemented: false },
+  { path: '/list-of-users', implemented: false, protected: true },
+  { path: '/messages', implemented: false, protected: true },
+  { path: '/search', implemented: false, protected: true },
+  { path: '/private-messages', implemented: false, protected: true },
+  { path: '/friends', implemented: false, protected: true },
   {
     path: '/admin',
     render: renderAdminPage,
-    implemented: true
+    implemented: true,
+    protected: true
   }
 ];

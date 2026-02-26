@@ -30,6 +30,12 @@ export function createHeader(router, activePath) {
 
   // Update auth actions based on auth state
   function updateAuthActions(user) {
+    // Update protected links visibility
+    const protectedLinks = header.querySelectorAll('[data-protected]');
+    protectedLinks.forEach(link => {
+      link.style.display = user ? 'inline-block' : 'none';
+    });
+
     if (authActions) {
       authActions.innerHTML = '';
 
@@ -47,7 +53,7 @@ export function createHeader(router, activePath) {
           e.preventDefault();
           const { error } = await signOut();
           if (!error) {
-            router.navigate('/');
+            router.navigate('/login');
           }
         });
         authActions.append(logoutBtn);
