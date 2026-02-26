@@ -2,6 +2,7 @@ import './login.css';
 import loginTemplate from './login.html?raw';
 import { signIn } from '../../services/supabaseClient.js';
 import { refreshUser } from '../../services/authState.js';
+import { markLastSeen } from '../../services/profileService.js';
 import { router } from '../../router/router.js';
 
 function bindAuthForm(container) {
@@ -44,6 +45,7 @@ function bindAuthForm(container) {
     
     // Refresh auth state and redirect to dashboard
     await refreshUser();
+    await markLastSeen();
     
     // Navigate to dashboard
     setTimeout(() => {

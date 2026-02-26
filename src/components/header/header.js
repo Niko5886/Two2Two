@@ -2,6 +2,7 @@ import './header.css';
 import headerTemplate from './header.html?raw';
 import { getAuthUser, onAuthStateChange, userHasRole } from '../../services/authState.js';
 import { signOut } from '../../services/supabaseClient.js';
+import { openProfileModal } from '../profile-modal/profileModal.js';
 
 export function createHeader(router, activePath) {
   const wrapper = document.createElement('div');
@@ -11,6 +12,7 @@ export function createHeader(router, activePath) {
   const sidebar = wrapper.querySelector('.app-sidebar');
   const links = wrapper.querySelectorAll('[data-nav-link]');
   const authActions = wrapper.querySelector('[data-auth-actions]');
+  const profileEditLink = wrapper.querySelector('[data-profile-edit]');
 
   // Handle regular navigation links
   links.forEach((link) => {
@@ -105,6 +107,15 @@ export function createHeader(router, activePath) {
     updateAuthActions(user);
   });
   updateAuthActions(getAuthUser());
+
+  if (profileEditLink) {
+    profileEditLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const user = getAuthUser();
+      if (!user) return;
+      openProfileModal(user.id, { title: 'My Profile' });
+    });
+  }
 
   // Return a fragment with both header and sidebar
   const fragment = document.createDocumentFragment();

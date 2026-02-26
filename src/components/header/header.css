@@ -21,7 +21,7 @@
 .app-logo {
   font-weight: 700;
   text-decoration: none;
-  min-width: fit-content;
+  min-width: max-content;
   color: #1a73e8;
   font-size: 1.25rem;
 }
@@ -84,7 +84,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  min-width: fit-content;
+  min-width: max-content;
   background: #f8f9fa;
   padding: 0.5rem 1rem;
   border-radius: 4px;
