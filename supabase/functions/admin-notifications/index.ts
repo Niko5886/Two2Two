@@ -1,5 +1,20 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
+
+type DenoEnv = {
+  get: (key: string) => string | undefined;
+};
+
+type DenoLike = {
+  env: DenoEnv;
+  serve: (handler: (req: Request) => Response | Promise<Response>) => void;
+};
+
+const deno = (globalThis as { Deno?: DenoLike }).Deno;
+
+if (!deno?.env || !deno?.serve) {
+  throw new Error("Deno runtime is required for this Edge Function");
+}
 
 type AdminNotification = {
   id: string;
@@ -11,13 +26,13 @@ type AdminNotification = {
   created_at: string;
 };
 
-const ADMIN_EMAIL = Deno.env.get("ADMIN_NOTIFICATION_EMAIL") ?? "lobido1988@gmail.com";
-const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "Two2Two <onboarding@resend.dev>";
-const ADMIN_DASHBOARD_URL = Deno.env.get("ADMIN_DASHBOARD_URL") ?? "https://two2two.netlify.app/admin";
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-const CRON_SECRET = Deno.env.get("NOTIFICATION_CRON_SECRET") ?? "";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const ADMIN_EMAIL = deno.env.get("ADMIN_NOTIFICATION_EMAIL") ?? "lobido1988@gmail.com";
+const EMAIL_FROM = deno.env.get("EMAIL_FROM") ?? "Two2Two <onboarding@resend.dev>";
+const ADMIN_DASHBOARD_URL = deno.env.get("ADMIN_DASHBOARD_URL") ?? "https://two2two.netlify.app/admin";
+const RESEND_API_KEY = deno.env.get("RESEND_API_KEY") ?? "";
+const CRON_SECRET = deno.env.get("NOTIFICATION_CRON_SECRET") ?? "";
+const SUPABASE_URL = deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const DEFAULT_BATCH_SIZE = 25;
 
 const jsonHeaders = {
@@ -92,8 +107,10 @@ function createAdminClient() {
   });
 }
 
+type AdminClient = ReturnType<typeof createAdminClient>;
+
 async function markStatus(
-  client: ReturnType<typeof createClient>,
+  client: AdminClient,
   id: string,
   status: "sent" | "error",
   errorMessage: string | null
@@ -108,7 +125,7 @@ async function markStatus(
   }
 }
 
-Deno.serve(async (req: Request) => {
+deno.serve(async (req: Request) => {
   try {
     if (req.method !== "POST") {
       return response({ error: "Method Not Allowed" }, 405);
