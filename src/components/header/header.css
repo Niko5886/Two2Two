@@ -87,15 +87,69 @@
   min-width: max-content;
   background: #f8f9fa;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: 8px;
   border: 1px solid #e8eaed;
 }
 
-.auth-user-email {
-  font-size: 0.85rem;
+.auth-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.auth-user-info:hover {
+  background: rgba(26, 115, 232, 0.08);
+}
+
+.auth-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #e8eaed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-user-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.auth-user-avatar__placeholder {
+  font-size: 1.5rem;
   color: #5f6368;
-  padding: 0 0.5rem;
-  font-weight: 500;
+}
+
+.auth-user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.auth-user-name {
+  font-size: 0.9rem;
+  color: #202124;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-user-email {
+  font-size: 0.75rem;
+  color: #5f6368;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .auth-link {

@@ -2,6 +2,7 @@ import './admin.css';
 import adminTemplate from './admin.html?raw';
 import { getAuthUser, userHasRole } from '../../services/authState.js';
 import { router } from '../../router/router.js';
+import toast from '../../components/toast/toast.js';
 import {
   fetchAdminStats,
   fetchPendingProfiles,
@@ -164,21 +165,26 @@ async function loadAdminData(container) {
   const historyBox = container.querySelector('[data-profile-history]');
   const notificationsBox = container.querySelector('[data-admin-notifications]');
 
-  const [stats, users, photos, audit, history, notifications] = await Promise.all([
-    fetchAdminStats(),
-    fetchPendingProfiles(),
-    fetchPendingPhotos(),
-    fetchAuditLog(),
-    fetchProfileHistory(),
-    fetchNotifications()
-  ]);
+  try {
+    const [stats, users, photos, audit, history, notifications] = await Promise.all([
+      fetchAdminStats(),
+      fetchPendingProfiles(),
+      fetchPendingPhotos(),
+      fetchAuditLog(),
+      fetchProfileHistory(),
+      fetchNotifications()
+    ]);
 
-  renderStats(statsBox, stats);
-  renderUsers(usersBox, users);
-  renderPhotos(photosBox, photos);
-  renderAuditLog(auditBox, audit);
-  renderProfileHistory(historyBox, history);
-  renderNotifications(notificationsBox, notifications);
+    renderStats(statsBox, stats);
+    renderUsers(usersBox, users);
+    renderPhotos(photosBox, photos);
+    renderAuditLog(auditBox, audit);
+    renderProfileHistory(historyBox, history);
+    renderNotifications(notificationsBox, notifications);
+  } catch (error) {
+    console.error('Failed to load admin data:', error);
+    toast.error('Грешка при зареждане на данните.', { title: 'Грешка при зареждане' });
+  }
 }
 
 function attachUserActions(container) {
@@ -187,17 +193,25 @@ function attachUserActions(container) {
     const userId = e.target.dataset.id;
     if (!action || !userId) return;
 
-    if (action === 'user-review') {
-      await updateProfileStatus(userId, 'in_review');
+    try {
+      if (action === 'user-review') {
+        await updateProfileStatus(userId, 'in_review');
+        toast.info('Профилът е преместен в преглед.', { title: 'В преглед' });
+      }
+      if (action === 'user-approve') {
+        await updateProfileStatus(userId, 'approved');
+        toast.success('Профилът е одобрен успешно!', { title: 'Одобрен профил' });
+      }
+      if (action === 'user-reject') {
+        const reason = prompt('Причина за отхвърляне:') || '';
+        await updateProfileStatus(userId, 'rejected', reason);
+        toast.warning('Профилът е отхвърлен.', { title: 'Отхвърлен профил' });
+      }
+      await loadAdminData(container);
+    } catch (error) {
+      console.error('Admin action error:', error);
+      toast.error(error.message || 'Възникна грешка при обработката.', { title: 'Грешка' });
     }
-    if (action === 'user-approve') {
-      await updateProfileStatus(userId, 'approved');
-    }
-    if (action === 'user-reject') {
-      const reason = prompt('Причина за отхвърляне:') || '';
-      await updateProfileStatus(userId, 'rejected', reason);
-    }
-    await loadAdminData(container);
   });
 }
 
@@ -214,14 +228,31 @@ function attachPhotoActions(container) {
     const action = e.target.dataset.action;
     if (!action) return;
 
-    if (action === 'photos-approve-selected') {
-      await approvePhotosBatch(Array.from(selectedPhotos));
-      await loadAdminData(container);
-    }
-    if (action === 'photos-reject-selected') {
-      const reason = prompt('Причина за отхвърляне:') || '';
-      await rejectPhotosBatch(Array.from(selectedPhotos), reason);
-      await loadAdminData(container);
+    try {
+      if (action === 'photos-approve-selected') {
+        const count = selectedPhotos.size;
+        if (count === 0) {
+          toast.warning('Моля, изберете поне една снимка.', { title: 'Няма избрани снимки' });
+          return;
+        }
+        await approvePhotosBatch(Array.from(selectedPhotos));
+        toast.success(`${count} ${count === 1 ? 'снимка е одобрена' : 'снимки са одобрени'} успешно!`, { title: 'Одобрени снимки' });
+        await loadAdminData(container);
+      }
+      if (action === 'photos-reject-selected') {
+        const count = selectedPhotos.size;
+        if (count === 0) {
+          toast.warning('Моля, изберете поне една снимка.', { title: 'Няма избрани снимки' });
+          return;
+        }
+        const reason = prompt('Причина за отхвърляне:') || '';
+        await rejectPhotosBatch(Array.from(selectedPhotos), reason);
+        toast.warning(`${count} ${count === 1 ? 'снимка е отхвърлена' : 'снимки са отхвърлени'}.`, { title: 'Отхвърлени снимки' });
+        await loadAdminData(container);
+      }
+    } catch (error) {
+      console.error('Photo action error:', error);
+      toast.error(error.message || 'Възникна грешка при обработката на снимките.', { title: 'Грешка' });
     }
   });
 }

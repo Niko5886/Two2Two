@@ -1,5 +1,6 @@
 import './profileModal.css';
-import { getAuthUser } from '../../services/authState.js';
+import { getAuthUser, userHasRole } from '../../services/authState.js';
+import toast from '../toast/toast.js';
 import {
   fetchProfileWithPhotos,
   uploadProfilePhoto,
@@ -208,19 +209,36 @@ async function handleActions(modalEl, userId) {
           fileInput.click();
           return;
         }
-        await uploadProfilePhoto(userId, file, { setPrimary: true });
+        const photoData = await uploadProfilePhoto(userId, file, { setPrimary: true });
+        const isAdmin = await userHasRole('admin');
+        
+        if (isAdmin) {
+          toast.success('Снимката е качена и автоматично одобрена.', { 
+            title: 'Снимка одобрена',
+            duration: 4000 
+          });
+        } else {
+          toast.info('Снимката е качена и чака одобрение от администратор.', { 
+            title: 'Снимка качена',
+            duration: 5000 
+          });
+        }
+        
         await loadProfile(modalEl, userId, isOwner, editMode);
         if (editMode) attachFormHandlers(modalEl, userId);
       }
       if (action === 'set-primary') {
         const photoId = e.target.dataset.photoId;
         await setPrimaryPhoto(userId, photoId);
+        toast.success('Снимката беше зададена като основна.', { title: 'Основна снимка' });
         await loadProfile(modalEl, userId, isOwner, editMode);
         if (editMode) attachFormHandlers(modalEl, userId);
       }
       if (action === 'delete-photo') {
         const photoId = e.target.dataset.photoId;
+        if (!confirm('Сигурен ли си, че искаш да изтриеш тази снимка?')) return;
         await deletePhoto(userId, photoId);
+        toast.warning('Снимката беше изтрита.', { title: 'Снимка изтрита' });
         await loadProfile(modalEl, userId, isOwner, editMode);
         if (editMode) attachFormHandlers(modalEl, userId);
       }
@@ -228,6 +246,7 @@ async function handleActions(modalEl, userId) {
       const statusEl = modalEl.querySelector('[data-status]');
       statusEl.textContent = err.message || 'Грешка при действие';
       statusEl.classList.add('profile-status--error');
+      toast.error(err.message || 'Грешка при изпълнение на действието.', { title: 'Грешка' });
     }
   });
 
@@ -239,13 +258,28 @@ async function handleActions(modalEl, userId) {
     const file = target.files?.[0];
     if (!file) return;
     try {
-      await uploadProfilePhoto(userId, file, { setPrimary: true });
+      const photoData = await uploadProfilePhoto(userId, file, { setPrimary: true });
+      const isAdmin = await userHasRole('admin');
+      
+      if (isAdmin) {
+        toast.success('Снимката е качена и автоматично одобрена.', { 
+          title: 'Снимка одобрена',
+          duration: 4000 
+        });
+      } else {
+        toast.info('Снимката е качена и чака одобрение от администратор.', { 
+          title: 'Снимка качена',
+          duration: 5000 
+        });
+      }
+      
       await loadProfile(modalEl, userId, isOwner, editMode);
       if (editMode) attachFormHandlers(modalEl, userId);
     } catch (err) {
       const statusEl = modalEl.querySelector('[data-status]');
       statusEl.textContent = err.message || 'Грешка при качване на снимка';
       statusEl.classList.add('profile-status--error');
+      toast.error(err.message || 'Грешка при качване на снимка.', { title: 'Грешка' });
     }
   });
 }
@@ -286,6 +320,12 @@ function attachFormHandlers(modalEl, userId) {
       statusEl.textContent = 'Записване...';
       await updateProfile(userId, payload);
       statusEl.textContent = 'Профилът е обновен успешно!';
+      
+      toast.success('Промените са запазени успешно!', { 
+        title: 'Профил актуализиран',
+        duration: 4000 
+      });
+      
       editMode = false;
       
       setTimeout(() => {
@@ -294,6 +334,7 @@ function attachFormHandlers(modalEl, userId) {
     } catch (err) {
       statusEl.textContent = err.message || 'Грешка при записване';
       statusEl.classList.add('profile-status--error');
+      toast.error(err.message || 'Грешка при записване на профила.', { title: 'Грешка' });
     }
   });
 }

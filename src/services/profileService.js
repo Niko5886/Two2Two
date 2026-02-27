@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js';
+import { getAuthUser, userHasRole } from './authState.js';
 
 const BUCKET = 'profile-photos';
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -73,16 +74,31 @@ export async function uploadProfilePhoto(userId, file, { setPrimary = false } = 
 
   const publicUrl = supabase.storage.from(BUCKET).getPublicUrl(filePath).data.publicUrl;
 
+  // Check if user is admin - admins get auto-approved photos
+  const isAdmin = await userHasRole('admin');
+  const currentUser = getAuthUser();
+  
+  const photoData = {
+    user_id: userId,
+    photo_url: publicUrl,
+    storage_path: filePath,
+    is_primary: false,
+    requested_primary: !!setPrimary
+  };
+
+  if (isAdmin) {
+    // Admin photos are auto-approved
+    photoData.approval_status = 'approved';
+    photoData.approved_by = currentUser?.id || null;
+    photoData.approved_at = new Date().toISOString();
+  } else {
+    // Regular users need approval
+    photoData.approval_status = 'pending';
+  }
+
   const { data, error } = await supabase
     .from('profile_photos')
-    .insert({
-      user_id: userId,
-      photo_url: publicUrl,
-      storage_path: filePath,
-      is_primary: false,
-      approval_status: 'pending',
-      requested_primary: !!setPrimary
-    })
+    .insert(photoData)
     .select()
     .single();
 
