@@ -17,7 +17,7 @@
 ### 2️⃣ Добави Secrets в Supabase
 
 1. Отвори [app.supabase.com](https://app.supabase.com)
-2. Избери проекта **Two2Two**
+2. Избери проекта **Couple2Couple**
 3. **Edge Functions** → **Manage secrets**
 4. Добави:
    - `RESEND_API_KEY` = (от стъпка 1)

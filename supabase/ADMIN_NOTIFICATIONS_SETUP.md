@@ -1,6 +1,6 @@
 # Конфигурация на Email Нотификации за Админи
 
-Това ръководство обяснява как да настроиш автоматични email нотификации за нови потребители и снимки в Two2Two.
+Това ръководство обяснява как да настроиш автоматични email нотификации за нови потребители и снимки в Couple2Couple.
 
 ## Стъпка 1: Генериране на Resend API Key
 
@@ -31,7 +31,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ## Стъпка 3: Добавяне на Secrets в Supabase Edge Functions
 
 1. Влез в [Supabase Dashboard](https://app.supabase.com)
-2. Избери проекта си **Two2Two**
+2. Избери проекта си **Couple2Couple**
 3. Отиди на **Edge Functions** → **Manage secrets**
 4. Добави следните secrets:
 
@@ -40,8 +40,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 | `RESEND_API_KEY` | `re_...` (от Стъпка 1) | ✅ Да |
 | `NOTIFICATION_CRON_SECRET` | `XyZ123abc...` (от Стъпка 2) | ✅ Да |
 | `ADMIN_NOTIFICATION_EMAIL` | `lobido1988@gmail.com` | ❌ Не (default) |
-| `EMAIL_FROM` | `Two2Two <noreply@yourdomain.com>` | ❌ Не (default) |
-| `ADMIN_DASHBOARD_URL` | `https://two2two.netlify.app/admin` | ❌ Не (default) |
+| `EMAIL_FROM` | `Couple2Couple <noreply@yourdomain.com>` | ❌ Не (default) |
+| `ADMIN_DASHBOARD_URL` | `https://couple2couple.netlify.app/admin` | ❌ Не (default) |
 
 > **Забележка:** `SUPABASE_URL` и `SUPABASE_SERVICE_ROLE_KEY` вече са налични автоматично в Edge Functions.
 
@@ -91,7 +91,7 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 1. Създай акаунт на [cron-job.org](https://cron-job.org)
 2. Кликни **Create Cronjob**
 3. Конфигурирай:
-   - **Title:** Two2Two Admin Notifications
+   - **Title:** Couple2Couple Admin Notifications
    - **URL:** `https://codjrsxeqmeoscnjyeyj.supabase.co/functions/v1/admin-notifications?batch=25`
    - **Schedule:** Every 5 minutes
    - **HTTP Method:** POST

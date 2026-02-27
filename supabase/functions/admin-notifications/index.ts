@@ -27,8 +27,8 @@ type AdminNotification = {
 };
 
 const ADMIN_EMAIL = deno.env.get("ADMIN_NOTIFICATION_EMAIL") ?? "lobido1988@gmail.com";
-const EMAIL_FROM = deno.env.get("EMAIL_FROM") ?? "Two2Two <onboarding@resend.dev>";
-const ADMIN_DASHBOARD_URL = deno.env.get("ADMIN_DASHBOARD_URL") ?? "https://two2two.netlify.app/admin";
+const EMAIL_FROM = deno.env.get("EMAIL_FROM") ?? "Couple2Couple <onboarding@resend.dev>";
+const ADMIN_DASHBOARD_URL = deno.env.get("ADMIN_DASHBOARD_URL") ?? "https://couple2couple.netlify.app/admin";
 const RESEND_API_KEY = deno.env.get("RESEND_API_KEY") ?? "";
 const CRON_SECRET = deno.env.get("NOTIFICATION_CRON_SECRET") ?? "";
 const SUPABASE_URL = deno.env.get("SUPABASE_URL") ?? "";
@@ -55,8 +55,8 @@ function truncateError(message: string, maxLen = 500) {
 function buildEmail(notification: AdminNotification) {
   const typeLabel = notification.type === "profile_pending" ? "нов потребител" : "нова снимка";
   const subject = notification.type === "profile_pending"
-    ? "Two2Two: Нов потребител чака одобрение"
-    : "Two2Two: Нова снимка чака одобрение";
+    ? "Couple2Couple: Нов потребител чака одобрение"
+    : "Couple2Couple: Нова снимка чака одобрение";
 
   const html = `
     <div style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">

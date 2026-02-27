@@ -1,6 +1,6 @@
 # Authentication Setup Guide
 
-This document explains how to set up authentication for the Two2Two application using Supabase Auth.
+This document explains how to set up authentication for the Couple2Couple application using Supabase Auth.
 
 ## Files Created/Modified
 

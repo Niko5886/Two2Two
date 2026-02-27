@@ -64,7 +64,7 @@ Required environment variables (Supabase Edge Functions settings):
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
 - `ADMIN_NOTIFICATION_EMAIL` (optional, defaults to `lobido1988@gmail.com`)
-- `EMAIL_FROM` (optional, defaults to `Two2Two <onboarding@resend.dev>`)
+- `EMAIL_FROM` (optional, defaults to `Couple2Couple <onboarding@resend.dev>`)
 - `ADMIN_DASHBOARD_URL` (optional)
 - `NOTIFICATION_CRON_SECRET` (recommended for protected invocation)
 
