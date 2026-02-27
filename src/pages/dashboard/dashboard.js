@@ -1,6 +1,7 @@
 import './dashboard.css';
 import dashboardTemplate from './dashboard.html?raw';
 import { supabase } from '../../services/supabaseClient.js';
+import { openProfileModal } from '../../components/profile-modal/profileModal.js';
 
 const AVATAR_EMOJIS = ['👨', '👩', '🧑', '👨‍🦱', '👩‍🦱', '🧑‍🦱'];
 
@@ -12,6 +13,8 @@ function getAvatarEmoji(userId) {
 function createUserCard(user) {
   const card = document.createElement('div');
   card.className = 'user-card';
+  card.style.cursor = 'pointer';
+  card.dataset.userId = user.id;
 
   const statusClass = user.is_online ? 'online' : 'offline';
   const statusText = user.is_online ? 'Online' : 'Offline';
@@ -34,6 +37,11 @@ function createUserCard(user) {
       </div>
     </div>
   `;
+
+  // Add click handler to open profile modal
+  card.addEventListener('click', () => {
+    openProfileModal(user.id, { title: `Профил: ${user.username || 'User'}` });
+  });
 
   return card;
 }
