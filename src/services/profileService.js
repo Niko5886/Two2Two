@@ -75,25 +75,18 @@ export async function uploadProfilePhoto(userId, file, { setPrimary = false } = 
 
   const { data, error } = await supabase
     .from('profile_photos')
-    .insert({ user_id: userId, photo_url: publicUrl, is_primary: setPrimary })
+    .insert({
+      user_id: userId,
+      photo_url: publicUrl,
+      storage_path: filePath,
+      is_primary: false,
+      approval_status: 'pending',
+      requested_primary: !!setPrimary
+    })
     .select()
     .single();
 
   if (error) throw error;
-
-  if (setPrimary) {
-    // unset other primary
-    await supabase
-      .from('profile_photos')
-      .update({ is_primary: false })
-      .eq('user_id', userId)
-      .neq('id', data.id);
-
-    await supabase
-      .from('profiles')
-      .update({ avatar_url: publicUrl })
-      .eq('id', userId);
-  }
 
   return data;
 }
@@ -101,12 +94,16 @@ export async function uploadProfilePhoto(userId, file, { setPrimary = false } = 
 export async function setPrimaryPhoto(userId, photoId) {
   const { data: photo, error: photoError } = await supabase
     .from('profile_photos')
-    .select('id, photo_url')
+    .select('id, photo_url, approval_status')
     .eq('id', photoId)
     .eq('user_id', userId)
     .single();
 
   if (photoError) throw photoError;
+
+  if (photo.approval_status !== 'approved') {
+    throw new Error('Снимката трябва да е одобрена, за да стане основна.');
+  }
 
   const { error } = await supabase
     .from('profile_photos')
@@ -131,12 +128,16 @@ export async function setPrimaryPhoto(userId, photoId) {
 export async function deletePhoto(userId, photoId) {
   const { data: photo, error: photoError } = await supabase
     .from('profile_photos')
-    .select('id, photo_url, is_primary')
+    .select('id, photo_url, is_primary, storage_path')
     .eq('id', photoId)
     .eq('user_id', userId)
     .single();
 
   if (photoError) throw photoError;
+
+  if (photo.storage_path) {
+    await supabase.storage.from(BUCKET).remove([photo.storage_path]);
+  }
 
   const { error } = await supabase
     .from('profile_photos')

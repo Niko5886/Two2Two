@@ -26,14 +26,27 @@ function renderGallery(photos, isOwner) {
   return photos
     .map((photo) => {
       const primaryClass = photo.is_primary ? 'is-primary' : '';
+      const status = photo.approval_status || 'approved';
+      const isApproved = status === 'approved';
+      const statusLabel = status === 'approved'
+        ? 'Одобрена'
+        : status === 'rejected'
+          ? 'Отхвърлена'
+          : status === 'in_review'
+            ? 'В преглед'
+            : 'Чака одобрение';
+      const statusClass = `photo-status photo-status--${status}`;
       const controls = isOwner
         ? `<div class="profile-photo__actions">
-             <button data-action="set-primary" data-photo-id="${photo.id}">Primary</button>
-             <button data-action="delete-photo" data-photo-id="${photo.id}">Delete</button>
+             <button data-action="set-primary" data-photo-id="${photo.id}" ${isApproved ? '' : 'disabled'}>Основна</button>
+             <button data-action="delete-photo" data-photo-id="${photo.id}">Изтрий</button>
            </div>`
         : '';
       return `<div>
-        <img src="${photo.photo_url}" class="profile-photo ${primaryClass}" alt="Profile photo" />
+        <div class="profile-photo__wrapper">
+          <span class="${statusClass}">${statusLabel}</span>
+          <img src="${photo.photo_url}" class="profile-photo ${primaryClass}" alt="Profile photo" />
+        </div>
         ${controls}
       </div>`;
     })

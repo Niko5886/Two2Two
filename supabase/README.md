@@ -50,11 +50,36 @@ To manually apply a migration:
 -- Copy the SQL content from the migration file and execute in Supabase SQL Editor
 ```
 
-## Database Schema
+## Edge Function: admin-notifications
 
-### Tables
+Added function path: `supabase/functions/admin-notifications/index.ts`
 
-- **projects**: Main project container
+Purpose:
+- Reads `pending` records from `public.admin_notifications`
+- Sends email to admin (`lobido1988@gmail.com` by default)
+- Marks each record as `sent` or `error` and persists `error_message`
+
+Required environment variables (Supabase Edge Functions settings):
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `RESEND_API_KEY`
+- `ADMIN_NOTIFICATION_EMAIL` (optional, defaults to `lobido1988@gmail.com`)
+- `EMAIL_FROM` (optional, defaults to `Two2Two <onboarding@resend.dev>`)
+- `ADMIN_DASHBOARD_URL` (optional)
+- `NOTIFICATION_CRON_SECRET` (recommended for protected invocation)
+
+Invoke example (from Supabase Scheduler / external cron):
+
+```bash
+curl -X POST "https://<project-ref>.supabase.co/functions/v1/admin-notifications?batch=25" \
+   -H "Authorization: Bearer <NOTIFICATION_CRON_SECRET>"
+```
+
+📖 **Detailed Setup Guide:** See [ADMIN_NOTIFICATIONS_SETUP.md](./ADMIN_NOTIFICATIONS_SETUP.md) for complete configuration instructions including:
+- Resend API key setup
+- Supabase secrets configuration
+- Cron job/scheduler setup (pg_cron, external services, GitHub Actions)
+- Testing and monitoring
 - **project_members**: Associates users with projects
 - **project_stages**: Kanban board columns for tasks
 - **tasks**: Individual tasks with rich HTML descriptions

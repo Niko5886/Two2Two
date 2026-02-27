@@ -98,6 +98,27 @@
   flex-wrap: wrap;
 }
 
+.profile-photo__wrapper {
+  position: relative;
+}
+
+.photo-status {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #5f6368;
+}
+
+.photo-status--pending { background: #f59e0b; }
+.photo-status--in_review { background: #2563eb; }
+.photo-status--approved { background: #16a34a; }
+.photo-status--rejected { background: #dc2626; }
+
 .profile-photo {
   width: 140px;
   height: 140px;

@@ -2,6 +2,229 @@ import './admin.css';
 import adminTemplate from './admin.html?raw';
 import { getAuthUser, userHasRole } from '../../services/authState.js';
 import { router } from '../../router/router.js';
+import {
+  fetchAdminStats,
+  fetchPendingProfiles,
+  updateProfileStatus,
+  fetchPendingPhotos,
+  approvePhotosBatch,
+  rejectPhotosBatch,
+  fetchAuditLog,
+  fetchProfileHistory,
+  fetchNotifications
+} from '../../services/adminService.js';
+
+const selectedPhotos = new Set();
+
+function renderStats(container, stats) {
+  container.innerHTML = `
+    <div class="admin-stats-grid">
+      <div class="stat-card">
+        <p>Чакащи потребители</p>
+        <strong>${stats.pendingUsers}</strong>
+      </div>
+      <div class="stat-card">
+        <p>Одобрени потребители</p>
+        <strong>${stats.approvedUsers}</strong>
+      </div>
+      <div class="stat-card">
+        <p>Чакащи снимки</p>
+        <strong>${stats.pendingPhotos}</strong>
+      </div>
+      <div class="stat-card">
+        <p>Одобрени снимки</p>
+        <strong>${stats.approvedPhotos}</strong>
+      </div>
+      <div class="stat-card">
+        <p>Общо потребители</p>
+        <strong>${stats.totalUsers}</strong>
+      </div>
+    </div>
+  `;
+}
+
+function renderUsers(container, users) {
+  if (!users.length) {
+    container.innerHTML = '<p class="muted">Няма чакащи или в преглед профили.</p>';
+    return;
+  }
+
+  container.innerHTML = users
+    .map((user) => {
+      return `
+        <div class="admin-list-card" data-user-id="${user.id}">
+          <div>
+            <p class="eyebrow">${user.approval_status}</p>
+            <h3>${user.username || 'Потребител'}</h3>
+            <p>${user.city || '—'}${user.birth_date ? ` · ${new Date(user.birth_date).getFullYear()}` : ''}</p>
+            <p class="muted">Регистриран: ${user.created_at ? new Date(user.created_at).toLocaleString('bg-BG') : '—'}</p>
+            ${user.rejection_reason ? `<p class="text-danger">Причина: ${user.rejection_reason}</p>` : ''}
+          </div>
+          <div class="admin-actions">
+            <button data-action="user-review" data-id="${user.id}">В преглед</button>
+            <button data-action="user-approve" data-id="${user.id}" class="btn-primary">Одобри</button>
+            <button data-action="user-reject" data-id="${user.id}" class="btn-danger">Отхвърли</button>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function renderPhotos(container, photos) {
+  selectedPhotos.clear();
+  if (!photos.length) {
+    container.innerHTML = '<p class="muted">Няма чакащи снимки.</p>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="photo-actions">
+      <button data-action="photos-approve-selected" class="btn-primary">Одобри избраните</button>
+      <button data-action="photos-reject-selected" class="btn-danger">Отхвърли избраните</button>
+    </div>
+    <div class="photo-grid">
+      ${photos
+        .map(
+          (photo) => `
+            <div class="photo-card" data-photo-id="${photo.id}">
+              <label class="checkbox">
+                <input type="checkbox" data-photo-checkbox value="${photo.id}" />
+                <span>Избери</span>
+              </label>
+              <img src="${photo.photo_url}" alt="Снимка" />
+              <p class="muted">Статус: ${photo.approval_status}</p>
+              <p class="muted">Качена: ${photo.uploaded_at ? new Date(photo.uploaded_at).toLocaleString('bg-BG') : '—'}</p>
+            </div>
+          `
+        )
+        .join('')}
+    </div>
+  `;
+}
+
+function renderAuditLog(container, entries) {
+  if (!entries.length) {
+    container.innerHTML = '<p class="muted">Няма записани админ действия.</p>';
+    return;
+  }
+  container.innerHTML = entries
+    .map(
+      (item) => `
+        <div class="audit-row">
+          <p><strong>${item.action}</strong> · ${new Date(item.created_at).toLocaleString('bg-BG')}</p>
+          <p class="muted">User: ${item.target_user_id || '—'} · Photo: ${item.target_photo_id || '—'}</p>
+        </div>
+      `
+    )
+    .join('');
+}
+
+function renderProfileHistory(container, entries) {
+  if (!entries.length) {
+    container.innerHTML = '<p class="muted">Няма история на профилни промени.</p>';
+    return;
+  }
+  container.innerHTML = entries
+    .map((item) => {
+      const oldName = item.old_data?.username || '—';
+      const newName = item.new_data?.username || '—';
+      return `
+        <div class="history-row">
+          <p><strong>${item.user_id}</strong> · ${new Date(item.changed_at).toLocaleString('bg-BG')}</p>
+          <p class="muted">${oldName} → ${newName}</p>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function renderNotifications(container, entries) {
+  if (!entries.length) {
+    container.innerHTML = '<p class="muted">Няма нови известия.</p>';
+    return;
+  }
+  container.innerHTML = entries
+    .map(
+      (item) => `
+        <div class="notification-row">
+          <p><strong>${item.type}</strong> · ${new Date(item.created_at).toLocaleString('bg-BG')}</p>
+          <p class="muted">User: ${item.target_user_id || '—'} · Photo: ${item.target_photo_id || '—'} · Статус: ${item.status}</p>
+        </div>
+      `
+    )
+    .join('');
+}
+
+async function loadAdminData(container) {
+  const statsBox = container.querySelector('[data-admin-stats]');
+  const usersBox = container.querySelector('[data-users-list]');
+  const photosBox = container.querySelector('[data-photos-list]');
+  const auditBox = container.querySelector('[data-audit-log]');
+  const historyBox = container.querySelector('[data-profile-history]');
+  const notificationsBox = container.querySelector('[data-admin-notifications]');
+
+  const [stats, users, photos, audit, history, notifications] = await Promise.all([
+    fetchAdminStats(),
+    fetchPendingProfiles(),
+    fetchPendingPhotos(),
+    fetchAuditLog(),
+    fetchProfileHistory(),
+    fetchNotifications()
+  ]);
+
+  renderStats(statsBox, stats);
+  renderUsers(usersBox, users);
+  renderPhotos(photosBox, photos);
+  renderAuditLog(auditBox, audit);
+  renderProfileHistory(historyBox, history);
+  renderNotifications(notificationsBox, notifications);
+}
+
+function attachUserActions(container) {
+  container.addEventListener('click', async (e) => {
+    const action = e.target.dataset.action;
+    const userId = e.target.dataset.id;
+    if (!action || !userId) return;
+
+    if (action === 'user-review') {
+      await updateProfileStatus(userId, 'in_review');
+    }
+    if (action === 'user-approve') {
+      await updateProfileStatus(userId, 'approved');
+    }
+    if (action === 'user-reject') {
+      const reason = prompt('Причина за отхвърляне:') || '';
+      await updateProfileStatus(userId, 'rejected', reason);
+    }
+    await loadAdminData(container);
+  });
+}
+
+function attachPhotoActions(container) {
+  container.addEventListener('change', (e) => {
+    if (e.target.matches('[data-photo-checkbox]')) {
+      const id = e.target.value;
+      if (e.target.checked) selectedPhotos.add(id);
+      else selectedPhotos.delete(id);
+    }
+  });
+
+  container.addEventListener('click', async (e) => {
+    const action = e.target.dataset.action;
+    if (!action) return;
+
+    if (action === 'photos-approve-selected') {
+      await approvePhotosBatch(Array.from(selectedPhotos));
+      await loadAdminData(container);
+    }
+    if (action === 'photos-reject-selected') {
+      const reason = prompt('Причина за отхвърляне:') || '';
+      await rejectPhotosBatch(Array.from(selectedPhotos), reason);
+      await loadAdminData(container);
+    }
+  });
+}
 
 async function initializeAdminPanel(container) {
   const status = container.querySelector('[data-admin-status]');
@@ -25,6 +248,10 @@ async function initializeAdminPanel(container) {
   status.textContent = 'Admin access verified.';
   status.className = 'admin-status admin-status--success';
   content.hidden = false;
+
+  await loadAdminData(container);
+  attachUserActions(container);
+  attachPhotoActions(container);
 }
 
 export function renderAdminPage() {

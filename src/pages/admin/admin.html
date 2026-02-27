@@ -2,13 +2,48 @@
   <div class="admin-card">
     <p class="admin-eyebrow">Restricted</p>
     <h1>Admin Panel</h1>
-    <p class="admin-subtitle">Visible only for users with admin role.</p>
+    <p class="admin-subtitle">Пълен контрол върху профили и снимки.</p>
     <p class="admin-status" role="status" aria-live="polite" data-admin-status>Verifying access...</p>
 
     <div class="admin-content" data-admin-content hidden>
-      <p><strong>Signed in as:</strong> <span data-admin-email>-</span></p>
-      <p><strong>Access level:</strong> Admin</p>
-      <p><strong>Next step:</strong> add management widgets for users/projects in this panel.</p>
+      <p><strong>Влязъл като:</strong> <span data-admin-email>-</span></p>
+      <p><strong>Роля:</strong> Admin</p>
+
+      <div class="admin-section">
+        <h2>Статус</h2>
+        <div data-admin-stats></div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-section__header">
+          <h2>Потребители за одобрение</h2>
+          <span class="muted">статуси: pending → in_review → approved/rejected</span>
+        </div>
+        <div data-users-list></div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-section__header">
+          <h2>Снимки за одобрение (batch)</h2>
+          <span class="muted">избери няколко и одобри/отхвърли наведнъж</span>
+        </div>
+        <div data-photos-list></div>
+      </div>
+
+      <div class="admin-section">
+        <h2>Нотификации</h2>
+        <div data-admin-notifications></div>
+      </div>
+
+      <div class="admin-section">
+        <h2>Admin Audit Log</h2>
+        <div data-audit-log></div>
+      </div>
+
+      <div class="admin-section">
+        <h2>История на профилни промени</h2>
+        <div data-profile-history></div>
+      </div>
     </div>
   </div>
 </section>

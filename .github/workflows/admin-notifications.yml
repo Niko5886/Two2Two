@@ -1,5 +1,10 @@
 name: Admin Email Notifications
 
+# ИНСТРУКЦИИ ЗА НАСТРОЙКА:
+# 1. Отиди в GitHub Repository Settings → Secrets and variables → Actions
+# 2. Добави нов secret с име: NOTIFICATION_CRON_SECRET
+# 3. Стойност: Supabase service_role key (от Supabase Dashboard → Settings → API)
+
 on:
   schedule:
     # Runs every 5 minutes
