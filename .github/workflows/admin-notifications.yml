@@ -1,0 +1,40 @@
+name: Admin Email Notifications
+
+on:
+  schedule:
+    # Runs every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call admin-notifications Edge Function
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://codjrsxeqmeoscnjyeyj.supabase.co/functions/v1/admin-notifications?batch=25" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.NOTIFICATION_CRON_SECRET }}")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::Admin notifications failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+          
+          # Parse and display results
+          PROCESSED=$(echo "$BODY" | jq -r '.processed // 0')
+          SENT=$(echo "$BODY" | jq -r '.sent // 0')
+          FAILED=$(echo "$BODY" | jq -r '.failed // 0')
+          
+          echo "✅ Processed: $PROCESSED, Sent: $SENT, Failed: $FAILED"
+          
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::warning::Some notifications failed to send"
+          fi
