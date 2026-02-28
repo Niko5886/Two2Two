@@ -1,7 +1,8 @@
-import './profile.css';
+﻿import './profile.css';
 import profileTemplate from './profile.html?raw';
 import toast from '../../components/toast/toast.js';
-import { fetchProfileWithPhotos, calculateAge, formatLastSeen } from '../../services/profileService.js';
+import { fetchProfileWithPhotos, calculateAge, formatLastSeen, updateProfile, uploadProfilePhoto } from '../../services/profileService.js';
+import { getAuthUser } from '../../services/authState.js';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -21,18 +22,37 @@ function formatGender(value) {
   return value;
 }
 
-function renderFact(label, value) {
-  return `<div class="public-profile-fact"><span class="public-profile-fact__label">${label}</span><span class="public-profile-fact__value">${escapeHtml(value || '—')}</span></div>`;
+function renderFact(label, displayValue, isEditable = false, field = '', type = 'text', rawValue = '') {
+  const editableClass = isEditable ? 'editable-field' : '';
+  const dataAttrs = isEditable ? `data-editable="true" data-field="${field}" data-type="${type}" data-raw-value="${escapeHtml(rawValue)}"` : '';
+  
+  return `<div class="public-profile-fact ${editableClass}" ${dataAttrs}>
+    <span class="public-profile-fact__label">${label}</span>
+    <span class="public-profile-fact__value" data-display>${escapeHtml(displayValue || '—')}</span>
+  </div>`;
 }
 
-function renderTags(container, items) {
-  if (!Array.isArray(items) || items.length === 0) {
+function renderTags(container, items, isEditable = false, tagField = '') {
+  const formattedItems = (!Array.isArray(items) || items.length === 0) ? [] : items;
+  
+  if (isEditable) {
+    container.classList.add('editable-field');
+    container.dataset.editable = 'true';
+    container.dataset.field = tagField;
+    container.dataset.type = 'array';
+    container.dataset.rawValue = formattedItems.join(', ');
+  } else {
+    container.classList.remove('editable-field');
+    delete container.dataset.editable;
+  }
+
+  if (formattedItems.length === 0) {
     container.innerHTML = '<p class="public-profile-empty">Няма добавени тагове.</p>';
     return;
   }
 
-  container.innerHTML = items
-    .map((item) => `<span class="public-profile-tag">${escapeHtml(item)}</span>`)
+  container.innerHTML = formattedItems
+    .map((item) => `<span class="public-profile-tag">${escapeHtml(item.trim())}</span>`)
     .join('');
 }
 
@@ -50,38 +70,55 @@ function renderGallery(container, photos) {
     .join('');
 }
 
-function setupActions(page, profileName) {
+function setupActions(page, profileName, isOwnProfile) {
+  const actionsSection = page.querySelector('[data-actions-section]');
+  if (actionsSection) {
+    if (isOwnProfile) {
+      actionsSection.style.display = 'none'; // Hide actions on own profile
+      return;
+    }
+    actionsSection.style.display = 'block';
+  }
+
   page.addEventListener('click', (event) => {
     const action = event.target?.dataset?.action;
     if (!action) return;
 
     if (action === 'message') {
       toast.info('Модулът за съобщения ще се свърже в следваща стъпка.', { title: `Съобщение до ${profileName}` });
-      return;
-    }
-
-    if (action === 'friend') {
+    } else if (action === 'friend') {
       toast.info('Добавянето в приятели ще се свърже в следваща стъпка.', { title: `Приятелство с ${profileName}` });
-      return;
-    }
-
-    if (action === 'like') {
+    } else if (action === 'like') {
       toast.success('Профилът е харесан.', { title: 'Харесване' });
     }
   });
 }
 
-async function loadPublicProfile(page, userId) {
+function getEighteenYearsAgoString() {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - 18);
+  return date.toISOString().split('T')[0];
+}
+
+async function loadPublicProfile(page, userId, routerContext) {
   const statusEl = page.querySelector('[data-status]');
   const nameEl = page.querySelector('[data-name]');
   const metaEl = page.querySelector('[data-meta]');
   const avatarEl = page.querySelector('[data-avatar]');
   const coverEl = page.querySelector('[data-cover]');
   const factsEl = page.querySelector('[data-facts]');
+  
+  const aboutWrapperEl = page.querySelector('[data-about-wrapper]');
   const aboutEl = page.querySelector('[data-about]');
   const lookingForEl = page.querySelector('[data-looking-for]');
   const fetishesEl = page.querySelector('[data-fetishes]');
   const galleryEl = page.querySelector('[data-gallery]');
+  
+  const addPhotoBtn = page.querySelector('[data-add-photo]');
+  const photoInput = page.querySelector('[data-photo-input]');
+
+  const currentUser = getAuthUser();
+  const isOwnProfile = currentUser?.id === userId;
 
   statusEl.textContent = 'Зареждане на профила...';
   statusEl.classList.remove('error');
@@ -96,8 +133,11 @@ async function loadPublicProfile(page, userId) {
     }
 
     const age = calculateAge(profile.birth_date);
-    const approvedPhotos = (photos || []).filter((photo) => (photo.approval_status || 'approved') === 'approved');
-    const primaryPhoto = approvedPhotos.find((photo) => photo.is_primary) || approvedPhotos[0] || null;
+    const visiblePhotos = isOwnProfile 
+      ? (photos || [])
+      : (photos || []).filter((photo) => (photo.approval_status || 'approved') === 'approved');
+      
+    const primaryPhoto = visiblePhotos.find((photo) => photo.is_primary) || visiblePhotos[0] || null;
 
     const profileName = profile.username || 'Профил';
     const city = profile.city || '—';
@@ -112,29 +152,246 @@ async function loadPublicProfile(page, userId) {
       coverEl.style.backgroundImage = `url('${avatarUrl.replace(/'/g, "\\'")}')`;
       coverEl.classList.add('has-image');
     } else {
+      avatarEl.innerHTML = '';
       avatarEl.textContent = profileName.charAt(0).toUpperCase();
+      coverEl.style.backgroundImage = '';
+      coverEl.classList.remove('has-image');
     }
 
     factsEl.innerHTML = [
-      renderFact('Потребител', profile.username || '—'),
-      renderFact('Възраст', age ? `${age} г.` : '—'),
-      renderFact('Пол', formatGender(profile.gender)),
-      renderFact('Град', profile.city || '—'),
-      renderFact('Ръст', profile.height_cm ? `${profile.height_cm} см` : '—'),
-      renderFact('Тегло', profile.weight_kg ? `${profile.weight_kg} кг` : '—'),
-      renderFact('18+ верификация', profile.is_verified_18_plus ? 'Да' : 'Не'),
-      renderFact('Последно онлайн', formatLastSeen(profile.last_seen_at))
+      renderFact('Потребител', profile.username || '—', isOwnProfile, 'username', 'text', profile.username || ''),
+      renderFact('Възраст', age ? `${age} г.` : '—', isOwnProfile, 'birth_date', 'date', profile.birth_date || ''),
+      renderFact('Пол', formatGender(profile.gender), isOwnProfile, 'gender', 'select', profile.gender || ''),
+      renderFact('Град', profile.city || '—', isOwnProfile, 'city', 'text', profile.city || ''),
+      renderFact('Ръст', profile.height_cm ? `${profile.height_cm} см` : '—', isOwnProfile, 'height_cm', 'number', profile.height_cm || ''),
+      renderFact('Тегло', profile.weight_kg ? `${profile.weight_kg} кг` : '—', isOwnProfile, 'weight_kg', 'number', profile.weight_kg || ''),
+      renderFact('18+ верификация', profile.is_verified_18_plus ? 'Да' : 'Не', false),
+      renderFact('Последно онлайн', formatLastSeen(profile.last_seen_at), false)
     ].join('');
 
-    aboutEl.textContent = profile.bio || profile.about || 'Потребителят все още не е добавил описание.';
-    renderTags(lookingForEl, profile.looking_for || []);
-    renderTags(fetishesEl, profile.fetishes || []);
-    renderGallery(galleryEl, approvedPhotos);
-    setupActions(page, profileName);
+    aboutEl.textContent = profile.bio || profile.about || (isOwnProfile ? 'Напиши нещо за себе си тук...' : 'Потребителят все още не е добавил описание.');
+    if (isOwnProfile) {
+      aboutWrapperEl.classList.add('editable-field');
+      aboutWrapperEl.dataset.editable = 'true';
+      aboutWrapperEl.dataset.field = 'about';
+      aboutWrapperEl.dataset.type = 'textarea';
+      aboutWrapperEl.dataset.rawValue = profile.bio || profile.about || '';
+    } else {
+      aboutWrapperEl.classList.remove('editable-field');
+      delete aboutWrapperEl.dataset.editable;
+    }
+
+    renderTags(lookingForEl, profile.looking_for || [], isOwnProfile, 'looking_for');
+    renderTags(fetishesEl, profile.fetishes || [], isOwnProfile, 'fetishes');
+    renderGallery(galleryEl, visiblePhotos);
+    
+    setupActions(page, profileName, isOwnProfile);
+    
+    if (isOwnProfile) {
+      addPhotoBtn.style.display = 'flex';
+      setupEditableFields(page, userId);
+      setupPhotoUpload(addPhotoBtn, photoInput, userId, () => loadPublicProfile(page, userId, routerContext));
+    } else {
+      addPhotoBtn.style.display = 'none';
+      if (photoInput) photoInput.style.display = 'none';
+    }
   } catch (error) {
     statusEl.textContent = error?.message || 'Възникна грешка при зареждането на профила.';
     statusEl.classList.add('error');
+    console.error(error);
   }
+}
+
+function setupPhotoUpload(addBtn, fileInput, userId, onUploadSuccess) {
+  const newBtn = addBtn.cloneNode(true);
+  addBtn.parentNode.replaceChild(newBtn, addBtn);
+  const newInput = fileInput.cloneNode(true);
+  fileInput.parentNode.replaceChild(newInput, fileInput);
+
+  newBtn.addEventListener('click', () => newInput.click());
+
+  newInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      newBtn.textContent = '⏳';
+      newBtn.disabled = true;
+      toast.info('Качване на снимката...', { duration: 2000 });
+      
+      await uploadProfilePhoto(userId, file);
+      toast.success('Снимката е качена успешно!');
+      
+      onUploadSuccess();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Неуспшно качване на снимка.');
+      newBtn.textContent = '➕';
+      newBtn.disabled = false;
+    } finally {
+      newInput.value = '';
+    }
+  });
+}
+
+function createEditForm(type, field, initialValue, onSave, onCancel) {
+  const form = document.createElement('form');
+  form.className = 'inline-edit-form';
+  
+  if (type === 'textarea') {
+    form.classList.add('inline-edit-form--textarea');
+    form.style.flexDirection = 'column';
+    form.innerHTML = `
+      <textarea class="inline-edit-textarea" required>${escapeHtml(initialValue)}</textarea>
+      <div class="textarea-actions">
+        <button type="button" class="inline-edit-btn" data-cancel>❌ Отказ</button>
+        <button type="submit" class="inline-edit-btn" style="background:#2563eb;color:#fff;">✅ Запази</button>
+      </div>
+    `;
+  } else if (type === 'array') {
+     form.innerHTML = `
+      <input type="text" class="inline-edit-input" value="${escapeHtml(initialValue)}" placeholder="разделени със запетая..." />
+      <div class="inline-edit-actions">
+        <button type="submit" class="inline-edit-btn" title="Запази">✅</button>
+        <button type="button" class="inline-edit-btn" data-cancel title="Отказ">❌</button>
+      </div>
+    `;
+  } else if (type === 'select' && field === 'gender') {
+    form.innerHTML = `
+      <select class="inline-edit-input" required>
+        <option value="male" ${initialValue === 'male' ? 'selected' : ''}>Мъж</option>
+        <option value="female" ${initialValue === 'female' ? 'selected' : ''}>Жена</option>
+        <option value="couple" ${initialValue === 'couple' ? 'selected' : ''}>Двойка</option>
+      </select>
+      <div class="inline-edit-actions">
+        <button type="submit" class="inline-edit-btn" title="Запази">✅</button>
+        <button type="button" class="inline-edit-btn" data-cancel title="Отказ">❌</button>
+      </div>
+    `;
+  } else if (type === 'date') {
+    form.innerHTML = `
+      <input type="${type}" class="inline-edit-input" value="${escapeHtml(initialValue)}" required max="${getEighteenYearsAgoString()}" />
+      <div class="inline-edit-actions">
+        <button type="submit" class="inline-edit-btn" title="Запази">✅</button>
+        <button type="button" class="inline-edit-btn" data-cancel title="Отказ">❌</button>
+      </div>
+    `;
+  } else {
+    form.innerHTML = `
+      <input type="${type}" class="inline-edit-input" value="${escapeHtml(initialValue)}" required />
+      <div class="inline-edit-actions">
+        <button type="submit" class="inline-edit-btn" title="Запази">✅</button>
+        <button type="button" class="inline-edit-btn" data-cancel title="Отказ">❌</button>
+      </div>
+    `;
+  }
+
+  form.querySelector('[data-cancel]').addEventListener('click', () => onCancel());
+  
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = form.querySelector('input, textarea, select');
+    let finalValue = input.value;
+    
+    if (type === 'array') {
+      finalValue = finalValue.split(',').map(s => s.trim()).filter(Boolean);
+    } else if (type === 'number') {
+      finalValue = Number(finalValue);
+    }
+    
+    if (finalValue === '' && type !== 'array') {
+        finalValue = null;
+    }
+
+    onSave(finalValue);
+  });
+  
+  return form;
+}
+
+function setupEditableFields(page, userId) {
+  if (page.dataset.editingBound === 'true') return;
+  page.dataset.editingBound = 'true';
+
+  page.addEventListener('click', async (e) => {
+    const el = e.target.closest('[data-editable="true"]');
+    if (!el || el.classList.contains('is-editing')) return;
+
+    const isInsideForm = e.target.closest('form');
+    if (isInsideForm) return;
+
+    el.classList.add('is-editing');
+    const field = el.dataset.field;
+    const type = el.dataset.type;
+    const rawValue = el.dataset.rawValue || '';
+    
+    let containerForForm = el;
+    let oldContent = '';
+
+    if (type === 'textarea') {
+      containerForForm = el;
+      oldContent = el.innerHTML;
+    } else if (type === 'array') {
+      containerForForm = el;
+      oldContent = el.innerHTML;
+    } else {
+      const displaySpan = el.querySelector('[data-display]');
+      if (displaySpan) {
+        containerForForm = displaySpan;
+        oldContent = displaySpan.innerHTML;
+      }
+    }
+
+    const cancel = () => {
+      containerForForm.innerHTML = oldContent;
+      el.classList.remove('is-editing');
+    };
+
+    const save = async (newValue) => {
+      const formNode = containerForForm.querySelector('form');
+      if (formNode) {
+        formNode.querySelectorAll('button, input, textarea, select').forEach(b => b.disabled = true);
+      }
+      
+      try {
+        let payloadField = field;
+        if (field === 'about') {
+           payloadField = 'bio';
+        }
+
+        await updateProfile(userId, { [payloadField]: newValue });
+        toast.success('Промяната е запазена!');
+        el.dataset.rawValue = Array.isArray(newValue) ? newValue.join(', ') : (newValue || '');
+        
+        if (type === 'textarea') {
+          containerForForm.innerHTML = `<p class="public-profile-about-text" data-about>${escapeHtml(newValue || 'Напиши нещо за себе си тук...')}</p>`;
+        } else if (type === 'array') {
+          renderTags(el, newValue, true, field);
+        } else if (type === 'select' && field === 'gender') {
+          containerForForm.innerHTML = escapeHtml(formatGender(newValue));
+        } else if (field === 'birth_date') {
+          containerForForm.innerHTML = escapeHtml(newValue ? `${calculateAge(newValue)} г.` : '—');
+        } else {
+          containerForForm.innerHTML = escapeHtml(newValue ? (newValue + (field === 'height_cm' ? ' см' : field === 'weight_kg' ? ' кг' : '')) : '—');
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error('Грешка при запазване: ' + err.message);
+        cancel();
+      } finally {
+        el.classList.remove('is-editing');
+      }
+    };
+
+    const form = createEditForm(type, field, rawValue, save, cancel);
+    containerForForm.innerHTML = '';
+    containerForForm.appendChild(form);
+    
+    setTimeout(() => {
+      const input = form.querySelector('input, textarea, select');
+      if (input) input.focus();
+    }, 10);
+  });
 }
 
 export function renderPublicProfilePage(context = {}) {
@@ -150,6 +407,6 @@ export function renderPublicProfilePage(context = {}) {
     return page;
   }
 
-  loadPublicProfile(page, userId);
+  loadPublicProfile(page, userId, context);
   return page;
 }

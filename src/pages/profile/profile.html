@@ -1,4 +1,4 @@
-<section class="public-profile-page">
+﻿<section class="public-profile-page">
   <div class="public-profile-shell">
     <header class="public-profile-hero" data-hero>
       <div class="public-profile-hero__cover" data-cover></div>
@@ -23,10 +23,12 @@
       <main class="public-profile-main">
         <section class="public-profile-card">
           <h2>За нас</h2>
-          <p class="public-profile-about" data-about></p>
+          <div class="public-profile-about editable-text-wrapper" data-about-wrapper>
+            <p class="public-profile-about-text" data-about></p>
+          </div>
         </section>
 
-        <section class="public-profile-card">
+        <section class="public-profile-card" data-actions-section>
           <h2>Действия</h2>
           <div class="public-profile-actions">
             <button type="button" class="profile-action-btn" data-action="message">Съобщение</button>
@@ -35,18 +37,23 @@
           </div>
         </section>
 
+        <!-- Ignoring editing for tags via inline for now or implementing basic text-based edit -->
         <section class="public-profile-card">
           <h2>Какво търси</h2>
-          <div class="public-profile-tags" data-looking-for></div>
+          <div class="public-profile-tags editable-field" data-looking-for data-field="looking_for" data-type="array"></div>
         </section>
 
         <section class="public-profile-card">
           <h2>Фетиши и интереси</h2>
-          <div class="public-profile-tags" data-fetishes></div>
+          <div class="public-profile-tags editable-field" data-fetishes data-field="fetishes" data-type="array"></div>
         </section>
 
         <section class="public-profile-card">
-          <h2>Снимки</h2>
+          <div class="card-header-flex">
+            <h2>Снимки</h2>
+            <button class="add-btn" data-add-photo style="display: none;" title="Добави снимка">➕</button>
+            <input type="file" data-photo-input accept="image/*" style="display: none;" />
+          </div>
           <div class="public-profile-gallery" data-gallery></div>
         </section>
       </main>
