@@ -27,9 +27,15 @@ a {
 
 .app-content {
   width: min(1000px, 100% - 2rem);
-  margin: 1.5rem auto;
+  margin: 0 auto;
   margin-left: calc(240px + 1.5rem);
   flex: 1;
+}
+
+.app-content:has(.dashboard-page) {
+  width: calc(100% - 240px);
+  max-width: none;
+  margin: 0 0 0 240px;
 }
 
 /* Adjust content when sidebar is hidden */

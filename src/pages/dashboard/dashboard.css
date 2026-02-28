@@ -1,11 +1,15 @@
 .dashboard-page {
   padding: 2rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: rgba(232, 238, 247, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 16px;
   min-height: 100vh;
 }
 
 .dashboard-container {
-  width: min(1200px, 100% - 2rem);
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -32,7 +36,7 @@
 
 .users-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 2rem;
   margin-bottom: 2rem;
 }
@@ -201,7 +205,7 @@
   }
 
   .users-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(1, minmax(0, 1fr));
     gap: 1.5rem;
   }
 
@@ -214,3 +218,15 @@
     height: 100px;
     font-size: 2.5rem;
   }}
+
+@media (max-width: 1400px) {
+  .users-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .users-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
