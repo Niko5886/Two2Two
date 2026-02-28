@@ -32,7 +32,8 @@ a {
   flex: 1;
 }
 
-.app-content:has(.dashboard-page) {
+.app-content:has(.dashboard-page),
+.app-content:has(.public-profile-page) {
   width: calc(100% - 240px);
   max-width: none;
   margin: 0 0 0 240px;

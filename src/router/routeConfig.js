@@ -3,6 +3,7 @@ import { renderDashboardPage } from '../pages/dashboard/dashboard.js';
 import { renderLoginPage } from '../pages/login/login.js';
 import { renderRegisterPage } from '../pages/register/register.js';
 import { renderAdminPage } from '../pages/admin/admin.js';
+import { renderPublicProfilePage } from '../pages/profile/profile.js';
 
 export const appRoutes = [
   {
@@ -43,5 +44,12 @@ export const appRoutes = [
     implemented: true,
     protected: true,
     requiredRole: 'admin'
+  },
+  {
+    path: '/profile/:id',
+    render: renderPublicProfilePage,
+    implemented: true,
+    protected: true,
+    requiredRole: null
   }
 ];

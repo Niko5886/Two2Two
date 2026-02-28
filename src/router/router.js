@@ -36,7 +36,7 @@ function renderLayout(contentNode, activePath) {
 
 export function initializeRouter() {
   appRoutes.forEach((route) => {
-    router.on(route.path, async () => {
+    router.on(route.path, async (match) => {
       // Check if route is protected
       if (route.protected && !isAuthenticated()) {
         // Redirect to login if not authenticated
@@ -53,7 +53,7 @@ export function initializeRouter() {
       }
 
       if (route.implemented && route.render) {
-        renderLayout(route.render(), route.path);
+        renderLayout(route.render({ router, match, params: match?.data || {} }), route.path);
         return;
       }
 

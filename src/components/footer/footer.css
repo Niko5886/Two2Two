@@ -1,6 +1,6 @@
 .app-footer {
-  background: #ffffff;
-  border-top: 1px solid #e8eaed;
+  background: #0b1220;
+  border-top: 1px solid #1b2a3e;
 }
 
 .app-footer__inner {
@@ -9,6 +9,13 @@
   min-height: 56px;
   display: flex;
   align-items: center;
-  color: #5f6368;
+  color: #b8c6db;
   font-size: 0.9rem;
+}
+
+.app-shell:has(.app-sidebar[style*="display: block"]) .app-footer__inner {
+  width: calc(100% - 240px);
+  max-width: none;
+  margin: 0 0 0 240px;
+  padding: 0 1.25rem;
 }

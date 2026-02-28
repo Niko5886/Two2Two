@@ -2,7 +2,6 @@ import './header.css';
 import headerTemplate from './header.html?raw';
 import { getAuthUser, onAuthStateChange, userHasRole } from '../../services/authState.js';
 import { signOut } from '../../services/supabaseClient.js';
-import { openProfileModal } from '../profile-modal/profileModal.js';
 import { fetchProfile } from '../../services/profileService.js';
 
 export function createHeader(router, activePath) {
@@ -81,7 +80,7 @@ export function createHeader(router, activePath) {
             
             // Make user info clickable to open profile modal
             userInfo.addEventListener('click', () => {
-              openProfileModal(user.id, { title: 'Моят профил' });
+              router.navigate(`/profile/${user.id}`);
             });
             
             // Avatar
@@ -104,20 +103,16 @@ export function createHeader(router, activePath) {
             const displayName = document.createElement('span');
             displayName.className = 'auth-user-name';
             displayName.textContent = profile?.username || 'Потребител';
-            const emailSpan = document.createElement('span');
-            emailSpan.className = 'auth-user-email';
-            emailSpan.textContent = user.email || '';
             userName.appendChild(displayName);
-            userName.appendChild(emailSpan);
             userInfo.appendChild(userName);
             
             authActions.append(userInfo);
           } catch (err) {
-            // Fallback to email only if profile fetch fails
-            const userEmail = document.createElement('span');
-            userEmail.className = 'auth-user-email';
-            userEmail.textContent = user.email;
-            authActions.append(userEmail);
+            // Fallback to generic name if profile fetch fails
+            const fallbackName = document.createElement('span');
+            fallbackName.className = 'auth-user-name';
+            fallbackName.textContent = 'Потребител';
+            authActions.append(fallbackName);
           }
 
           const logoutBtn = document.createElement('button');
@@ -173,7 +168,7 @@ export function createHeader(router, activePath) {
       e.preventDefault();
       const user = getAuthUser();
       if (!user) return;
-      openProfileModal(user.id, { title: 'Моят профил' });
+      router.navigate(`/profile/${user.id}`);
     });
   }
 

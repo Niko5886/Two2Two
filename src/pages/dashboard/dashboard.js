@@ -1,7 +1,6 @@
 import './dashboard.css';
 import dashboardTemplate from './dashboard.html?raw';
 import { supabase } from '../../services/supabaseClient.js';
-import { openProfileModal } from '../../components/profile-modal/profileModal.js';
 
 const AVATAR_EMOJIS = ['👨', '👩', '🧑', '👨‍🦱', '👩‍🦱', '🧑‍🦱'];
 
@@ -10,7 +9,7 @@ function getAvatarEmoji(userId) {
   return AVATAR_EMOJIS[seed % AVATAR_EMOJIS.length];
 }
 
-function createUserCard(user) {
+function createUserCard(user, navigateToProfile) {
   const card = document.createElement('div');
   card.className = 'user-card';
   card.style.cursor = 'pointer';
@@ -38,15 +37,14 @@ function createUserCard(user) {
     </div>
   `;
 
-  // Add click handler to open profile modal
   card.addEventListener('click', () => {
-    openProfileModal(user.id, { title: `Профил: ${user.username || 'User'}` });
+    navigateToProfile(user.id);
   });
 
   return card;
 }
 
-async function loadUsers(page) {
+async function loadUsers(page, navigateToProfile) {
   const grid = page.querySelector('[data-users-grid]');
   const noUsersMsg = page.querySelector('.no-users-message');
 
@@ -69,7 +67,7 @@ async function loadUsers(page) {
     noUsersMsg.style.display = 'none';
 
     data.forEach((user) => {
-      const card = createUserCard(user);
+      const card = createUserCard(user, navigateToProfile);
       grid.append(card);
     });
   } catch (error) {
@@ -78,23 +76,28 @@ async function loadUsers(page) {
   }
 }
 
-function setupRealtimeUpdates(page) {
+function setupRealtimeUpdates(page, navigateToProfile) {
   return supabase
     .channel('profiles-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
-      loadUsers(page);
+      loadUsers(page, navigateToProfile);
     })
     .subscribe();
 }
 
-export function renderDashboardPage() {
+export function renderDashboardPage(context = {}) {
   const wrapper = document.createElement('div');
   wrapper.innerHTML = dashboardTemplate;
   const page = wrapper.firstElementChild;
+  const navigateToProfile = (userId) => {
+    if (context?.router) {
+      context.router.navigate(`/profile/${userId}`);
+    }
+  };
 
   setTimeout(() => {
-    loadUsers(page);
-    setupRealtimeUpdates(page);
+    loadUsers(page, navigateToProfile);
+    setupRealtimeUpdates(page, navigateToProfile);
   }, 0);
 
   return page;
