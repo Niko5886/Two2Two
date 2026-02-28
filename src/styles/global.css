@@ -5,13 +5,17 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background-color: #f5f6f8;
-  background-image: url('/couple.jpg');
+  background-color: #0b1220;
+  background-image: linear-gradient(rgba(11, 18, 32, 0.85), rgba(11, 18, 32, 0.85)), url('/sexshoop.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
   color: #202124;
+}
+
+body.auth-body {
+  background-image: url('/couple.jpg');
 }
 
 a {
@@ -43,3 +47,5 @@ a {
 .app-shell:not(:has(.app-sidebar[style*="display: block"])) .app-content {
   margin-left: auto;
 }
+
+

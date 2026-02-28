@@ -1,20 +1,23 @@
 .dashboard-page {
   padding: 2rem;
-  background: rgba(232, 238, 247, 0.45);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 16px;
+  /* Dark color #0b1220 over the sexshoop.jpg image (roughly 85% opacity overlay) */
+  background: transparent;
+  
+  
+  
+  
   min-height: 100vh;
+  color: #f5f7fb;
 }
 
 .dashboard-container {
   width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
 .dashboard-header {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -23,154 +26,110 @@
 
 .dashboard-header h1 {
   margin: 0;
-  font-size: 2.5rem;
-  color: #162436;
+  font-size: 2.2rem;
+  color: #f5f7fb;
   font-weight: 700;
 }
 
 .dashboard-subtitle {
   margin: 0.5rem 0 0;
-  color: #4a5a6a;
+  color: #d4deee;
   font-size: 1rem;
 }
 
 .users-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
 .user-card {
-  background: #ffffff;
+  background: #0b1220; /* Same as sidebar background */
+  border: 1px solid #1b2a3e; /* Same as sidebar border */
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(28, 45, 63, 0.08);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .user-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(28, 45, 63, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+  border-color: #4f8fdf; /* Same as sidebar hover border */
 }
 
-.user-card-header {
+.user-card-image {
   position: relative;
-  height: 200px;
-  overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.user-avatar-container {
   width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  aspect-ratio: 4 / 5; /* Matches typical vertical portrait */
+  overflow: hidden;
+  background: #16253a; /* Same as sidebar hover */
 }
 
-.user-avatar {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: #f0f4f8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 3.5rem;
-  border: 4px solid #ffffff;
-  position: relative;
-}
-
-.user-avatar img {
+.user-card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
+  display: block;
 }
 
-.status-indicator {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 4px solid #ffffff;
+.user-avatar-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: 5rem;
+  background: linear-gradient(135deg, #1b2a3e 0%, #0b1220 100%);
 }
 
-.status-indicator.online {
-  background: #4caf50;
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
-}
-
-.status-indicator.offline {
-  background: #f44336;
-  box-shadow: 0 0 8px rgba(244, 67, 54, 0.6);
-}
-
-.user-card-body {
-  padding: 1.5rem;
+.user-card-info {
+  background: #0b1220;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .user-name {
-  margin: 0 0 0.5rem;
-  font-size: 1.4rem;
+  margin: 0;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #162436;
-}
-
-.user-age {
-  margin: 0 0 0.75rem;
-  font-size: 0.95rem;
-  color: #4a5a6a;
-}
-
-.user-age strong {
-  color: #1f6fb2;
-  font-weight: 600;
-}
-
-.user-status-text {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e8eef5;
-  font-size: 0.85rem;
-  font-weight: 600;
+  color: #f5f7fb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  display: inline-block;
-}
-
-.status-dot.online {
   background: #4caf50;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
 }
 
-.status-dot.offline {
-  background: #f44336;
+.user-details {
+  font-size: 0.9rem;
+  color: #8eb7f1; /* Light blue accent */
+  display: flex;
+  align-items: center;
 }
 
-.status-text.online {
-  color: #4caf50;
-}
-
-.status-text.offline {
-  color: #f44336;
+.user-location {
+  font-size: 0.85rem;
+  color: #d4deee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .loading-message,
@@ -178,7 +137,7 @@
   grid-column: 1 / -1;
   text-align: center;
   padding: 3rem 1rem;
-  color: #4a5a6a;
+  color: #d4deee;
   font-size: 1.1rem;
 }
 
@@ -187,46 +146,25 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.no-users-message {
-  color: #7a8a9a;
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 @media (max-width: 768px) {
+  .users-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
   .dashboard-header {
-    align-items: center;
-  }
-
-  .users-grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-    gap: 1.5rem;
-  }
-
-  .dashboard-header h1 {
-    font-size: 1.8rem;
-  }
-
-  .user-avatar {
-    width: 100px;
-    height: 100px;
-    font-size: 2.5rem;
-  }}
-
-@media (max-width: 1400px) {
-  .users-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 480px) {
   .users-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }

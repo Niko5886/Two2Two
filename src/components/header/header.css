@@ -1,5 +1,5 @@
 .app-header {
-  background: #0b1220;
+  background: transparent;
   border-bottom: 1px solid #1b2a3e;
   position: fixed;
   top: 0;
@@ -104,7 +104,7 @@
   left: 0;
   width: 240px;
   height: calc(100vh - 64px);
-  background: #0b1220;
+  background: transparent;
   border-right: 1px solid #1b2a3e;
   overflow-y: auto;
   z-index: 50;
@@ -129,13 +129,11 @@
   border-left: 3px solid transparent;
 }
 
-.app-sidebar__link:hover {
-  background: #16253a;
+.app-sidebar__link:hover { padding-left: 2rem;
   border-left-color: #4f8fdf;
 }
 
-.app-sidebar__link.is-active {
-  background: #1b2c45;
+.app-sidebar__link.is-active { padding-left: 2rem;
   color: #8eb7f1;
   font-weight: 600;
   border-left-color: #8eb7f1;
@@ -251,3 +249,4 @@
 .auth-logout-btn:hover {
   background: #c62828;
 }
+

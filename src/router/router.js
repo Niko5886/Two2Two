@@ -32,6 +32,13 @@ function renderLayout(contentNode, activePath) {
 
   shell.append(createFooter());
   app.append(shell);
+  
+  // Toggle background image based on active page
+  if (activePath === '/login' || activePath === '/register' || activePath === '/') {
+    document.body.classList.add('auth-body');
+  } else {
+    document.body.classList.remove('auth-body');
+  }
 }
 
 export function initializeRouter() {

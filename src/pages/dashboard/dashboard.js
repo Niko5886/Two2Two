@@ -16,24 +16,29 @@ function createUserCard(user, navigateToProfile) {
   card.dataset.userId = user.id;
 
   const statusClass = user.is_online ? 'online' : 'offline';
-  const statusText = user.is_online ? 'Online' : 'Offline';
+  
+  // Try to create string for age and gender like "37+43 Jahre ⚥"
+  const ageStr = user.age ? `${user.age} Years` : 'Age unknown';
+  let genderSymbol = '';
+  if (user.gender === 'male') genderSymbol = '♂';
+  else if (user.gender === 'female') genderSymbol = '♀';
+  else if (user.gender === 'couple') genderSymbol = '⚥';
+  
+  const locationStr = user.city ? `<div class="user-location">${user.city}</div>` : '';
 
   card.innerHTML = `
-    <div class="user-card-header">
-      <div class="user-avatar-container">
-        <div class="user-avatar">
-          ${user.avatar_url ? `<img src="${user.avatar_url}" alt="${user.username}">` : getAvatarEmoji(user.id)}
-        </div>
-        <div class="status-indicator ${statusClass}"></div>
-      </div>
+    <div class="user-card-image">
+      ${user.avatar_url ? `<img src="${user.avatar_url}" alt="${user.username}" loading="lazy">` : `<div class="user-avatar-placeholder">${getAvatarEmoji(user.id)}</div>`}
     </div>
-    <div class="user-card-body">
-      <h3 class="user-name">${user.username || 'User'}</h3>
-      <p class="user-age"><strong>${user.age || '?'}</strong> years old</p>
-      <div class="user-status-text">
-        <span class="status-dot ${statusClass}"></span>
-        <span class="status-text ${statusClass}">${statusText}</span>
+    <div class="user-card-info">
+      <div class="user-name">
+        ${user.username || 'User'}
+        ${user.is_online ? `<span class="status-dot tooltip" title="Online"></span>` : ''}
       </div>
+      <div class="user-details">
+        <span>${ageStr} ${genderSymbol}</span>
+      </div>
+      ${locationStr}
     </div>
   `;
 

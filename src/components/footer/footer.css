@@ -1,5 +1,5 @@
 .app-footer {
-  background: #0b1220;
+  background: transparent;
   border-top: 1px solid #1b2a3e;
 }
 
@@ -19,3 +19,4 @@
   margin: 0 0 0 240px;
   padding: 0 1.25rem;
 }
+
