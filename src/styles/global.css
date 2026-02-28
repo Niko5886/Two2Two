@@ -5,7 +5,12 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #f5f6f8;
+  background-color: #f5f6f8;
+  background-image: url('/couple.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: #202124;
 }
 
