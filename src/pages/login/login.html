@@ -1,47 +1,83 @@
 <section class="auth-page auth-page--login">
-  <div class="auth-card">
-    <div class="auth-card__header">
-      <h1>Login</h1>
+  <div class="auth-split">
+
+    <!-- LEFT: Info blocks -->
+    <div class="auth-info">
+      <div class="info-block" style="--i:0">
+        <span class="info-icon">🔒</span>
+        <h3>Само за пълнолетни двойки</h3>
+        <p>Ексклузивно пространство за двойки 18+, които търсят дискретни запознанства със сходни интереси. Свързвайте се, споделяйте в личен чат и планирайте срещи при ясни граници и взаимно уважение.</p>
+      </div>
+
+      <div class="info-block" style="--i:1">
+        <span class="info-icon">🛡️</span>
+        <h3>Създадено с фокус върху дискретността</h3>
+        <p>Профилите и снимките са защитени. Всеки профил и изображение се преглеждат от администратор преди публикуване.</p>
+      </div>
+
+      <div class="info-block" style="--i:2">
+        <span class="info-icon">💬</span>
+        <h3>Контрол, поверителност и съгласие</h3>
+        <p>Търсете двойки, изпращайте съобщения и координирайте срещи с пълен контрол върху личната ви информация и при взаимно съгласие.</p>
+      </div>
+
+      <div class="info-block" style="--i:3">
+        <span class="info-icon">✅</span>
+        <h3>Строга верификация</h3>
+        <ul>
+          <li>Потвърждение за възраст 18+</li>
+          <li>Одобрение само за реални двойки</li>
+          <li>Без индивидуални мъже или жени</li>
+        </ul>
+      </div>
     </div>
 
-    <form class="auth-form" data-auth-form>
-      <label class="auth-field">
-        <span>Email</span>
-        <input type="email" name="email" placeholder="you@email.com" autocomplete="email" required />
-      </label>
+    <!-- RIGHT: Login form -->
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <h1>Login</h1>
+      </div>
 
-      <label class="auth-field">
-        <span>Password</span>
-        <input type="password" name="password" placeholder="Your password" autocomplete="current-password" required />
-      </label>
+      <form class="auth-form" data-auth-form>
+        <label class="auth-field">
+          <span>Email</span>
+          <input type="email" name="email" placeholder="you@email.com" autocomplete="email" required />
+        </label>
 
-      <button class="auth-button" type="submit">Sign in</button>
-      <p class="auth-status" role="status" aria-live="polite" data-auth-status></p>
-    </form>
+        <label class="auth-field">
+          <span>Password</span>
+          <input type="password" name="password" placeholder="Your password" autocomplete="current-password" required />
+        </label>
 
-    <div class="auth-card__footer">
-      <p>Don't have an account? <a href="/register" class="auth-link">Create one</a></p>
-    </div>
+        <button class="auth-button" type="submit">Sign in</button>
+        <p class="auth-status" role="status" aria-live="polite" data-auth-status></p>
+      </form>
 
-    <div class="test-credentials" data-test-creds>
-      <button type="button" class="test-creds-toggle" data-toggle-creds>
-        <span class="toggle-icon">▼</span>
-        Test Credentials
-      </button>
-      <div class="test-creds-list" data-creds-list style="display: none;">
-        <div class="test-cred-item">
-          <p class="test-cred-label">Admin Account:</p>
-          <p class="test-cred-text">Email: <strong>nik@gmail.com</strong></p>
-          <p class="test-cred-text">Password: <strong>Password123!</strong></p>
-          <button type="button" class="use-cred-btn" data-use-admin>Use Admin</button>
-        </div>
-        <div class="test-cred-item">
-          <p class="test-cred-label">User Account:</p>
-          <p class="test-cred-text">Email: <strong>maria@gmail.com</strong></p>
-          <p class="test-cred-text">Password: <strong>Password123!</strong></p>
-          <button type="button" class="use-cred-btn" data-use-user>Use User</button>
+      <div class="auth-card__footer">
+        <p>Don't have an account? <a href="/register" class="auth-link">Create one</a></p>
+      </div>
+
+      <div class="test-credentials" data-test-creds>
+        <button type="button" class="test-creds-toggle" data-toggle-creds>
+          <span class="toggle-icon">▼</span>
+          Test Credentials
+        </button>
+        <div class="test-creds-list" data-creds-list style="display: none;">
+          <div class="test-cred-item">
+            <p class="test-cred-label">Admin Account:</p>
+            <p class="test-cred-text">Email: <strong>nik@gmail.com</strong></p>
+            <p class="test-cred-text">Password: <strong>Password123!</strong></p>
+            <button type="button" class="use-cred-btn" data-use-admin>Use Admin</button>
+          </div>
+          <div class="test-cred-item">
+            <p class="test-cred-label">User Account:</p>
+            <p class="test-cred-text">Email: <strong>maria@gmail.com</strong></p>
+            <p class="test-cred-text">Password: <strong>Password123!</strong></p>
+            <button type="button" class="use-cred-btn" data-use-user>Use User</button>
+          </div>
         </div>
       </div>
     </div>
+
   </div>
 </section>
