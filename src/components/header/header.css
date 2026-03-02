@@ -139,11 +139,24 @@
   overflow-y: auto;
   z-index: 50;
   display: none;
+  flex-direction: column;
+}
+
+/* offcanvas-body заема цялата оставаща височина и центрира nav */
+.app-sidebar .offcanvas-body,
+.app-sidebar > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
 }
 
 .app-sidebar__nav {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  justify-content: center;
   padding: 1rem 0;
 }
 
@@ -287,9 +300,18 @@
     height: 100vh;
     border-right: none;
   }
+
+  /* Избутваме навигацията под хедъра (64px) на мобилни екрани */
+  .app-sidebar .offcanvas-body {
+    padding-top: 100px;
+  }
 }
 
 @media (min-width: 992px) {
+  .app-sidebar {
+    display: flex;
+  }
+
   .app-sidebar.offcanvas-lg {
     transform: none;
     visibility: visible;
@@ -298,6 +320,9 @@
 
   .app-sidebar .offcanvas-body {
     overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 }
 

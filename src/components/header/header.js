@@ -52,7 +52,7 @@ export function createHeader(router, activePath) {
     authActions.dataset.updating = 'true';
 
     try {
-      // Update protected links visibility
+      // Покажи protected линкове само при логнат потребител
       const protectedLinks = wrapper.querySelectorAll('[data-protected]:not([data-admin-only])');
       protectedLinks.forEach((link) => {
         link.style.display = user ? 'flex' : 'none';
@@ -70,9 +70,9 @@ export function createHeader(router, activePath) {
         });
       }
 
-      // Show/hide sidebar based on auth
+      // Sidebar и бутон видими само при логнат потребител
       if (sidebar) {
-        sidebar.style.display = user ? 'block' : 'none';
+        sidebar.style.display = user ? 'flex' : 'none';
       }
 
       if (sidebarToggle) {
