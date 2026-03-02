@@ -163,3 +163,20 @@ export async function fetchNotifications(limit = 20) {
   if (error) throw error;
   return data || [];
 }
+
+export async function fetchAllUsers() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function deleteUserAndData(userId) {
+  const { data, error } = await supabase.functions.invoke('delete-user', {
+    body: { userId }
+  });
+  if (error) throw error;
+  return data;
+}

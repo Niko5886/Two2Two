@@ -1,49 +1,197 @@
-<section class="admin-page">
-  <div class="admin-card">
-    <p class="admin-eyebrow">Restricted</p>
-    <h1>Admin Panel</h1>
-    <p class="admin-subtitle">Пълен контрол върху профили и снимки.</p>
-    <p class="admin-status" role="status" aria-live="polite" data-admin-status>Verifying access...</p>
+﻿<section class="admin-page container py-4">
+  <div class="admin-header d-flex flex-column flex-md-row justify-content-between align-items-md-center border-bottom border-secondary pb-3 mb-4">
+    <div class="mb-3 mb-md-0">
+      <p class="admin-eyebrow text-uppercase text-primary fw-bold mb-1" style="letter-spacing: 1px; font-size: 0.85rem;"><i class="bi bi-shield-lock me-2"></i>Administration</p>
+      <h1 class="text-white mb-0 display-6">Контролен Панел</h1>
+      <p class="text-muted small mt-1 mb-0">Пълен контрол върху платформата CoupleCouple.</p>
+    </div>
+    <div class="text-md-end bg-dark rounded-3 px-3 py-2 border border-secondary border-opacity-50">
+      <p class="mb-0 text-white-50 small"><i class="bi bi-person-circle me-1"></i> Оторизиран като:</p>
+      <strong data-admin-email class="text-white d-block mb-1">—</strong>
+      <span class="badge bg-danger">Super Admin</span>
+    </div>
+  </div>
 
-    <div class="admin-content" data-admin-content hidden>
-      <p><strong>Влязъл като:</strong> <span data-admin-email>-</span></p>
-      <p><strong>Роля:</strong> Admin</p>
+  <p class="admin-status text-center py-4" role="status" aria-live="polite" data-admin-status>
+    <span class="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>
+    <span class="text-muted">Удостоверяване на права...</span>
+  </p>
 
-      <div class="admin-section">
-        <h2>Статус</h2>
-        <div data-admin-stats></div>
-      </div>
+  <div class="admin-content" data-admin-content hidden>
+    
+    <!-- Admin Navigation Tabs -->
+    <ul class="nav nav-tabs custom-admin-tabs mb-4 px-2 border-secondary" id="adminTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active bg-transparent text-white border-0 border-bottom border-primary border-3" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats-panel" type="button" role="tab" style="border-radius:0;">
+          <i class="bi bi-graph-up me-2"></i>Статистика
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link bg-transparent text-muted border-0 border-bottom border-transparent border-3" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-panel" type="button" role="tab" style="border-radius:0;" onmouseover="this.classList.add('text-white')" onmouseout="if(!this.classList.contains('active')) this.classList.remove('text-white')">
+          <i class="bi bi-hourglass-split me-2"></i>Чакащи
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link bg-transparent text-muted border-0 border-bottom border-transparent border-3" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-panel" type="button" role="tab" style="border-radius:0;" onmouseover="this.classList.add('text-white')" onmouseout="if(!this.classList.contains('active')) this.classList.remove('text-white')">
+          <i class="bi bi-people me-2"></i>Потребители
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link bg-transparent text-muted border-0 border-bottom border-transparent border-3" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs-panel" type="button" role="tab" style="border-radius:0;" onmouseover="this.classList.add('text-white')" onmouseout="if(!this.classList.contains('active')) this.classList.remove('text-white')">
+          <i class="bi bi-journal-code me-2"></i>Логове
+        </button>
+      </li>
+    </ul>
 
-      <div class="admin-section">
-        <div class="admin-section__header">
-          <h2>Потребители за одобрение</h2>
-          <span class="muted">статуси: pending → in_review → approved/rejected</span>
+    <!-- Tab Content -->
+    <div class="tab-content" id="adminTabsContent">
+      
+      <!-- Stats Panel -->
+      <div class="tab-pane fade show active" id="stats-panel" role="tabpanel">
+        <div class="mb-4">
+          <h4 class="text-white mb-3 fw-light">Общ преглед</h4>
+          <div data-admin-stats></div>
         </div>
-        <div data-users-list></div>
       </div>
 
-      <div class="admin-section">
-        <div class="admin-section__header">
-          <h2>Снимки за одобрение (batch)</h2>
-          <span class="muted">избери няколко и одобри/отхвърли наведнъж</span>
+      <!-- Pending Panel -->
+      <div class="tab-pane fade" id="pending-panel" role="tabpanel">
+        <div class="row g-4">
+          <div class="col-xl-6">
+            <div class="card bg-dark border-secondary border-opacity-50 h-100">
+              <div class="card-header bg-transparent border-bottom border-secondary border-opacity-50 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5 class="text-white mb-0"><i class="bi bi-person-fill-exclamation text-warning me-2"></i>Чакащи профили</h5>
+                </div>
+                <p class="text-muted small mb-0 mt-1">Pending → In Review → Approved/Rejected</p>
+              </div>
+              <div class="card-body p-0">
+                <div class="users-scroll-container" style="max-height: 500px; overflow-y: auto;" data-users-list></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-6">
+            <div class="card bg-dark border-secondary border-opacity-50 h-100">
+              <div class="card-header bg-transparent border-bottom border-secondary border-opacity-50 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5 class="text-white mb-0"><i class="bi bi-image text-info me-2"></i>Чакащи снимки</h5>
+                </div>
+                <p class="text-muted small mb-0 mt-1">Избери няколко и одобри/отхвърли наведнъж</p>
+              </div>
+              <div class="card-body p-3">
+                <div class="" data-photos-list></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div data-photos-list></div>
       </div>
 
-      <div class="admin-section">
-        <h2>Нотификации</h2>
-        <div data-admin-notifications></div>
+      <!-- All Users Panel -->
+      <div class="tab-pane fade" id="users-panel" role="tabpanel">
+        <div class="card bg-dark border-secondary border-opacity-50">
+          <div class="card-header bg-transparent border-bottom border-secondary border-opacity-50 py-3">
+            <div class="row align-items-center">
+              <div class="col-12 col-md-6 mb-3 mb-md-0">
+                <h5 class="text-white mb-0"><i class="bi bi-person-lines-fill text-primary me-2"></i>Управление на потребители</h5>
+                <p class="text-muted small mb-0 mt-1">Търсене, преглед и изтриване на профили</p>
+              </div>
+              <div class="col-12 col-md-6 text-md-end">
+                  <!-- Search bar (placeholder if needed later) -->
+                  <div class="input-group ms-md-auto" style="max-width: 300px;">
+                      <span class="input-group-text bg-secondary border-0 text-white"><i class="bi bi-search"></i></span>
+                      <input type="text" id="adminUserSearch" class="form-control bg-dark border-secondary text-white" placeholder="Търси (скоро)..." disabled>
+                  </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-dark table-hover align-middle mb-0 custom-admin-table">
+                <thead class="table-group-divider border-secondary border-opacity-50">
+                  <tr>
+                    <th scope="col" class="ps-3 text-muted fw-normal">Потребител</th>
+                    <th scope="col" class="text-muted fw-normal">Детайли</th>
+                    <th scope="col" class="text-muted fw-normal text-center">Статус</th>
+                    <th scope="col" class="pe-3 text-end text-muted fw-normal">Действие</th>
+                  </tr>
+                </thead>
+                <tbody data-all-users-list>
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="admin-section">
-        <h2>Admin Audit Log</h2>
-        <div data-audit-log></div>
+      <!-- Logs Panel -->
+      <div class="tab-pane fade" id="logs-panel" role="tabpanel">
+        <div class="row g-4">
+          <div class="col-lg-4">
+             <div class="card bg-dark border-secondary border-opacity-50 h-100">
+                <div class="card-header border-bottom border-secondary border-opacity-50 py-3">
+                    <h6 class="text-white mb-0"><i class="bi bi-bell text-warning me-2"></i>Нотификации</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="logs-scroll-container list-group list-group-flush rounded-0" style="max-height: 400px; overflow-y: auto;" data-admin-notifications></div>
+                </div>
+             </div>
+          </div>
+          <div class="col-lg-4">
+             <div class="card bg-dark border-secondary border-opacity-50 h-100">
+                <div class="card-header border-bottom border-secondary border-opacity-50 py-3">
+                    <h6 class="text-white mb-0"><i class="bi bi-shield-check text-success me-2"></i>Audit Log</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="logs-scroll-container list-group list-group-flush rounded-0" style="max-height: 400px; overflow-y: auto;" data-audit-log></div>
+                </div>
+             </div>
+          </div>
+          <div class="col-lg-4">
+             <div class="card bg-dark border-secondary border-opacity-50 h-100">
+                <div class="card-header border-bottom border-secondary border-opacity-50 py-3">
+                    <h6 class="text-white mb-0"><i class="bi bi-clock-history text-info me-2"></i>Профилни промени</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="logs-scroll-container list-group list-group-flush rounded-0" style="max-height: 400px; overflow-y: auto;" data-profile-history></div>
+                </div>
+             </div>
+          </div>
+        </div>
       </div>
 
-      <div class="admin-section">
-        <h2>История на профилни промени</h2>
-        <div data-profile-history></div>
-      </div>
     </div>
   </div>
 </section>
+<script>
+  // Simple vanilla JS logic for the nested tabs in standard HTML 
+  // (Bootstrap 5 JS isn't initialized on raw HTML inject, so we do standard toggle)
+  document.addEventListener('DOMContentLoaded', () => {
+     const tabBtns = document.querySelectorAll('#adminTabs .nav-link');
+     tabBtns.forEach(btn => {
+         btn.addEventListener('click', (e) => {
+             e.preventDefault();
+             // Reset all buttons
+             tabBtns.forEach(b => {
+                 b.classList.remove('active', 'border-primary', 'text-white');
+                 b.classList.add('text-muted', 'border-transparent');
+             });
+             // Set active styles to clicked btn
+             const targetBtn = e.currentTarget;
+             targetBtn.classList.remove('text-muted', 'border-transparent');
+             targetBtn.classList.add('active', 'border-primary', 'text-white');
+             
+             // Hide all panes
+             document.querySelectorAll('.tab-pane').forEach(p => {
+                 p.classList.remove('show', 'active');
+             });
+             // Show targeted pane
+             const targetId = targetBtn.getAttribute('data-bs-target');
+             const targetPane = document.querySelector(targetId);
+             if(targetPane) {
+                 targetPane.classList.add('show', 'active');
+             }
+         });
+     });
+  });
+</script>
