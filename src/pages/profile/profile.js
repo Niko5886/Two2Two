@@ -58,6 +58,56 @@ function renderFact(label, displayValue, isEditable = false, field = '', type = 
   </div>`;
 }
 
+function renderPartnerCard(profile, partnerIndex, isOwnProfile) {
+  const prefix = `partner${partnerIndex}_`;
+  const fallbackBirthDate = partnerIndex === 1 ? profile.birth_date : null;
+  const fallbackGender = partnerIndex === 1 ? profile.gender : null;
+  const fallbackPhoto = partnerIndex === 1 ? profile.avatar_url : null;
+
+  const photoUrl = profile[`${prefix}photo_url`] || fallbackPhoto;
+  const birthDate = profile[`${prefix}birth_date`] || fallbackBirthDate;
+  const gender = profile[`${prefix}gender`] || fallbackGender;
+  const age = calculateAge(birthDate);
+
+  const roleTitle = partnerIndex === 1 ? 'Партньор 1 (Жена)' : 'Партньор 2 (Мъж)';
+
+  return `
+    <article class="partner-info-card" data-partner-card="${partnerIndex}">
+      <div class="partner-info-card__head">
+        <div class="partner-info-card__photo">
+          ${photoUrl
+            ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(roleTitle)}" loading="lazy" />`
+            : `<div class="partner-info-card__placeholder"><i class="bi bi-person"></i></div>`}
+        </div>
+        <div class="partner-info-card__meta">
+          <p class="partner-info-card__title">${roleTitle}</p>
+          <p class="partner-info-card__subtitle">${getGenderSymbol(gender)} ${age ? `${age} г.` : '—'}</p>
+        </div>
+        ${isOwnProfile ? `<button type="button" class="btn btn-outline-light btn-sm partner-photo-upload-btn" data-upload-partner-photo="${partnerIndex}"><i class="bi bi-camera me-1"></i>Снимка</button>` : ''}
+      </div>
+
+      <div class="public-profile-facts">
+        ${renderFact('Пол', formatGender(gender), isOwnProfile, `${prefix}gender`, 'select', gender || '')}
+        ${renderFact('Възраст', age ? `${age} г.` : '—', isOwnProfile, `${prefix}birth_date`, 'date', birthDate || '')}
+        ${renderFact('Ръст', profile[`${prefix}height_cm`] ? `${profile[`${prefix}height_cm`]} см` : '—', isOwnProfile, `${prefix}height_cm`, 'number', profile[`${prefix}height_cm`] || '')}
+        ${renderFact('Тегло', profile[`${prefix}weight_kg`] ? `${profile[`${prefix}weight_kg`]} кг` : '—', isOwnProfile, `${prefix}weight_kg`, 'number', profile[`${prefix}weight_kg`] || '')}
+        ${renderFact('Цвят на коса', profile[`${prefix}hair_color`] || '—', isOwnProfile, `${prefix}hair_color`, 'text', profile[`${prefix}hair_color`] || '')}
+        ${renderFact('Цвят на очи', profile[`${prefix}eye_color`] || '—', isOwnProfile, `${prefix}eye_color`, 'text', profile[`${prefix}eye_color`] || '')}
+        ${renderFact('Телосложение', profile[`${prefix}appearance`] || '—', isOwnProfile, `${prefix}appearance`, 'text', profile[`${prefix}appearance`] || '')}
+        ${renderFact('Ориентация', profile[`${prefix}orientation`] || '—', isOwnProfile, `${prefix}orientation`, 'text', profile[`${prefix}orientation`] || '')}
+        ${renderFact('Зодия', profile[`${prefix}zodiac_sign`] || '—', isOwnProfile, `${prefix}zodiac_sign`, 'text', profile[`${prefix}zodiac_sign`] || '')}
+      </div>
+    </article>
+  `;
+}
+
+function renderPartners(container, profile, isOwnProfile) {
+  container.innerHTML = [
+    renderPartnerCard(profile, 1, isOwnProfile),
+    renderPartnerCard(profile, 2, isOwnProfile)
+  ].join('');
+}
+
 function renderTags(container, items, isEditable = false, tagField = '') {
   const formattedItems = (!Array.isArray(items) || items.length === 0) ? [] : items;
   
@@ -132,14 +182,14 @@ async function loadPublicProfile(page, userId, routerContext) {
   const nameEl = page.querySelector('[data-name]');
   const metaEl = page.querySelector('[data-meta]');
   const avatarEl = page.querySelector('[data-avatar]');
-  const coverEl = page.querySelector('[data-cover]');
-  const factsEl = page.querySelector('[data-facts]');
+  const partnersEl = page.querySelector('[data-partners]');
   
   const aboutWrapperEl = page.querySelector('[data-about-wrapper]');
   const aboutEl = page.querySelector('[data-about]');
   const lookingForEl = page.querySelector('[data-looking-for]');
   const fetishesEl = page.querySelector('[data-fetishes]');
   const galleryEl = page.querySelector('[data-gallery]');
+  const partnerPhotoInput = page.querySelector('[data-partner-photo-input]');
   
   const addPhotoBtn = page.querySelector('[data-add-photo]');
   const photoInput = page.querySelector('[data-photo-input]');
@@ -181,25 +231,7 @@ async function loadPublicProfile(page, userId, routerContext) {
       avatarEl.textContent = profileName.charAt(0).toUpperCase();
     }
 
-    // Calculate ages for both partners
-    const age1 = calculateAge(profile.partner1_birth_date || profile.birth_date);
-    const age2 = calculateAge(profile.partner2_birth_date);
-
-    factsEl.innerHTML = [
-      renderFact('Потребител', profile.username || '—', isOwnProfile, 'username', 'text', profile.username || ''),
-      // Partner 1
-      isOwnProfile ? renderFact('Партньор 1 възраст', age1 ? `${age1} г.` : '—', true, 'partner1_birth_date', 'date', profile.partner1_birth_date || profile.birth_date || '') : (age1 ? renderFact('Партньор 1 възраст', `${age1} г.`, false) : ''),
-      isOwnProfile ? renderFact('Партньор 1 пол', formatGender(profile.partner1_gender || ''), true, 'partner1_gender', 'select', profile.partner1_gender || '') : (profile.partner1_gender ? renderFact('Партньор 1 пол', formatGender(profile.partner1_gender)) : ''),
-      // Partner 2
-      isOwnProfile ? renderFact('Партньор 2 възраст', age2 ? `${age2} г.` : '—', true, 'partner2_birth_date', 'date', profile.partner2_birth_date || '') : (age2 ? renderFact('Партньор 2 възраст', `${age2} г.`, false) : ''),
-      isOwnProfile ? renderFact('Партньор 2 пол', formatGender(profile.partner2_gender || ''), true, 'partner2_gender', 'select', profile.partner2_gender || '') : (profile.partner2_gender ? renderFact('Партньор 2 пол', formatGender(profile.partner2_gender)) : ''),
-      // General info
-      renderFact('Град', profile.city || '—', isOwnProfile, 'city', 'text', profile.city || ''),
-      renderFact('Ръст', profile.height_cm ? `${profile.height_cm} см` : '—', isOwnProfile, 'height_cm', 'number', profile.height_cm || ''),
-      renderFact('Тегло', profile.weight_kg ? `${profile.weight_kg} кг` : '—', isOwnProfile, 'weight_kg', 'number', profile.weight_kg || ''),
-      renderFact('18+ верификация', profile.is_verified_18_plus ? 'Да' : 'Не', false),
-      renderFact('Последно онлайн', formatLastSeen(profile.last_seen_at), false)
-    ].filter(f => f !== '').join('');
+    renderPartners(partnersEl, profile, isOwnProfile);
 
     aboutEl.textContent = profile.bio || profile.about || (isOwnProfile ? 'Напиши нещо за себе си тук...' : 'Потребителят все още не е добавил описание.');
     if (isOwnProfile) {
@@ -224,9 +256,11 @@ async function loadPublicProfile(page, userId, routerContext) {
       photoInput.hidden = false;
       setupEditableFields(page, userId);
       setupPhotoUpload(addPhotoBtn, photoInput, userId, () => loadPublicProfile(page, userId, routerContext));
+      setupPartnerPhotoUpload(page, partnerPhotoInput, userId, () => loadPublicProfile(page, userId, routerContext));
     } else {
       addPhotoBtn.hidden = true;
       if (photoInput) photoInput.hidden = true;
+      if (partnerPhotoInput) partnerPhotoInput.hidden = true;
     }
   } catch (error) {
     statusEl.textContent = error?.message || 'Възникна грешка при зареждането на профила.';
@@ -263,6 +297,39 @@ function setupPhotoUpload(addBtn, fileInput, userId, onUploadSuccess) {
       newBtn.disabled = false;
     } finally {
       newInput.value = '';
+    }
+  });
+}
+
+function setupPartnerPhotoUpload(page, input, userId, onUploadSuccess) {
+  if (!input || page.dataset.partnerPhotoUploadBound === 'true') return;
+  page.dataset.partnerPhotoUploadBound = 'true';
+
+  page.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-upload-partner-photo]');
+    if (!trigger) return;
+
+    input.dataset.partnerIndex = trigger.dataset.uploadPartnerPhoto;
+    input.click();
+  });
+
+  input.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    const partnerIndex = input.dataset.partnerIndex;
+    if (!file || !partnerIndex) return;
+
+    try {
+      toast.info('Качване на снимката...', { duration: 1800 });
+      const uploaded = await uploadProfilePhoto(userId, file);
+      await updateProfile(userId, { [`partner${partnerIndex}_photo_url`]: uploaded.photo_url });
+      toast.success('Снимката е качена успешно!');
+      onUploadSuccess();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || 'Неуспешно качване на снимка.');
+    } finally {
+      input.value = '';
+      delete input.dataset.partnerIndex;
     }
   });
 }
@@ -415,7 +482,10 @@ function setupEditableFields(page, userId) {
         } else if (field === 'birth_date' || field === 'partner1_birth_date' || field === 'partner2_birth_date') {
           containerForForm.innerHTML = escapeHtml(newValue ? `${calculateAge(newValue)} г.` : '—');
         } else {
-          containerForForm.innerHTML = escapeHtml(newValue ? (newValue + (field === 'height_cm' ? ' см' : field === 'weight_kg' ? ' кг' : '')) : '—');
+          const heightFields = ['height_cm', 'partner1_height_cm', 'partner2_height_cm'];
+          const weightFields = ['weight_kg', 'partner1_weight_kg', 'partner2_weight_kg'];
+          const suffix = heightFields.includes(field) ? ' см' : weightFields.includes(field) ? ' кг' : '';
+          containerForForm.innerHTML = escapeHtml(newValue ? `${newValue}${suffix}` : '—');
         }
       } catch (err) {
         console.error(err);
