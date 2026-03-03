@@ -9,6 +9,25 @@ function getAvatarEmoji(userId) {
   return AVATAR_EMOJIS[seed % AVATAR_EMOJIS.length];
 }
 
+function calculateAge(birthDate) {
+  if (!birthDate) return null;
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+function getGenderSymbol(gender) {
+  if (gender === 'male') return '♂️';
+  if (gender === 'female') return '♀️';
+  if (gender === 'couple') return '⚥';
+  return '';
+}
+
 function createUserCard(user, navigateToProfile) {
   const card = document.createElement('div');
   card.className = 'user-card card h-100';
@@ -17,12 +36,19 @@ function createUserCard(user, navigateToProfile) {
   card.setAttribute('role', 'link');
   card.setAttribute('aria-label', `Отвори профила на ${user.username || 'потребител'}`);
   
-  // Try to create string for age and gender like "37+43 Jahre ⚥"
-  const ageStr = user.age ? `${user.age} Years` : 'Age unknown';
-  let genderSymbol = '';
-  if (user.gender === 'male') genderSymbol = '♂';
-  else if (user.gender === 'female') genderSymbol = '♀';
-  else if (user.gender === 'couple') genderSymbol = '⚥';
+  // Calculate ages for both partners
+  const age1 = calculateAge(user.partner1_birth_date);
+  const age2 = calculateAge(user.partner2_birth_date);
+  
+  let ageGenderStr = '';
+  if (age1 && age2) {
+    const gender1 = getGenderSymbol(user.partner1_gender);
+    const gender2 = getGenderSymbol(user.partner2_gender);
+    ageGenderStr = `${age1}${gender1} + ${age2}${gender2}`;
+  } else if (age1) {
+    const gender1 = getGenderSymbol(user.partner1_gender);
+    ageGenderStr = `${age1}${gender1}`;
+  }
   
   const locationStr = user.city
     ? `<div class="user-location"><i class="bi bi-geo-alt me-1"></i>${user.city}</div>`
@@ -37,9 +63,7 @@ function createUserCard(user, navigateToProfile) {
         ${user.username || 'User'}
         ${user.is_online ? `<span class="status-dot" title="Online"></span>` : ''}
       </div>
-      <div class="user-details">
-        <span><i class="bi bi-person-vcard me-1"></i>${ageStr} ${genderSymbol}</span>
-      </div>
+      ${ageGenderStr ? `<div class="user-details"><i class="bi bi-cake2 me-1"></i>${ageGenderStr}</div>` : ''}
       ${locationStr}
     </div>
   `;

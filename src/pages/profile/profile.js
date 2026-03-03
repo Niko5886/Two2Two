@@ -160,16 +160,25 @@ async function loadPublicProfile(page, userId, routerContext) {
       coverEl.classList.remove('has-image');
     }
 
+    // Calculate ages for both partners
+    const age1 = calculateAge(profile.partner1_birth_date || profile.birth_date);
+    const age2 = calculateAge(profile.partner2_birth_date);
+
     factsEl.innerHTML = [
       renderFact('Потребител', profile.username || '—', isOwnProfile, 'username', 'text', profile.username || ''),
-      renderFact('Възраст', age ? `${age} г.` : '—', isOwnProfile, 'birth_date', 'date', profile.birth_date || ''),
-      renderFact('Пол', formatGender(profile.gender), isOwnProfile, 'gender', 'select', profile.gender || ''),
+      // Partner 1
+      age1 ? renderFact('Партньор 1 възраст', `${age1} г.`, isOwnProfile, 'partner1_birth_date', 'date', profile.partner1_birth_date || profile.birth_date || '') : '',
+      profile.partner1_gender ? renderFact('Партньор 1 пол', formatGender(profile.partner1_gender), isOwnProfile, 'partner1_gender', 'select', profile.partner1_gender || '') : '',
+      // Partner 2
+      age2 ? renderFact('Партньор 2 възраст', `${age2} г.`, isOwnProfile, 'partner2_birth_date', 'date', profile.partner2_birth_date || '') : '',
+      profile.partner2_gender ? renderFact('Партньор 2 пол', formatGender(profile.partner2_gender), isOwnProfile, 'partner2_gender', 'select', profile.partner2_gender || '') : '',
+      // General info
       renderFact('Град', profile.city || '—', isOwnProfile, 'city', 'text', profile.city || ''),
       renderFact('Ръст', profile.height_cm ? `${profile.height_cm} см` : '—', isOwnProfile, 'height_cm', 'number', profile.height_cm || ''),
       renderFact('Тегло', profile.weight_kg ? `${profile.weight_kg} кг` : '—', isOwnProfile, 'weight_kg', 'number', profile.weight_kg || ''),
       renderFact('18+ верификация', profile.is_verified_18_plus ? 'Да' : 'Не', false),
       renderFact('Последно онлайн', formatLastSeen(profile.last_seen_at), false)
-    ].join('');
+    ].filter(f => f !== '').join('');
 
     aboutEl.textContent = profile.bio || profile.about || (isOwnProfile ? 'Напиши нещо за себе си тук...' : 'Потребителят все още не е добавил описание.');
     if (isOwnProfile) {
@@ -264,6 +273,17 @@ function createEditForm(type, field, initialValue, onSave, onCancel) {
         <option value="male" ${initialValue === 'male' ? 'selected' : ''}>Мъж</option>
         <option value="female" ${initialValue === 'female' ? 'selected' : ''}>Жена</option>
         <option value="couple" ${initialValue === 'couple' ? 'selected' : ''}>Двойка</option>
+      </select>
+      <div class="inline-edit-actions">
+        <button type="submit" class="inline-edit-btn btn btn-primary btn-sm" title="Запази"><i class="bi bi-check-lg"></i></button>
+        <button type="button" class="inline-edit-btn btn btn-outline-secondary btn-sm" data-cancel title="Отказ"><i class="bi bi-x-lg"></i></button>
+      </div>
+    `;
+  } else if (type === 'select' && (field === 'partner1_gender' || field === 'partner2_gender')) {
+    form.innerHTML = `
+      <select class="inline-edit-input" required>
+        <option value="male" ${initialValue === 'male' ? 'selected' : ''}>Мъж</option>
+        <option value="female" ${initialValue === 'female' ? 'selected' : ''}>Жена</option>
       </select>
       <div class="inline-edit-actions">
         <button type="submit" class="inline-edit-btn btn btn-primary btn-sm" title="Запази"><i class="bi bi-check-lg"></i></button>
@@ -369,9 +389,9 @@ function setupEditableFields(page, userId) {
           containerForForm.innerHTML = `<p class="public-profile-about-text" data-about>${escapeHtml(newValue || 'Напиши нещо за себе си тук...')}</p>`;
         } else if (type === 'array') {
           renderTags(el, newValue, true, field);
-        } else if (type === 'select' && field === 'gender') {
+        } else if (type === 'select' && (field === 'gender' || field === 'partner1_gender' || field === 'partner2_gender')) {
           containerForForm.innerHTML = escapeHtml(formatGender(newValue));
-        } else if (field === 'birth_date') {
+        } else if (field === 'birth_date' || field === 'partner1_birth_date' || field === 'partner2_birth_date') {
           containerForForm.innerHTML = escapeHtml(newValue ? `${calculateAge(newValue)} г.` : '—');
         } else {
           containerForForm.innerHTML = escapeHtml(newValue ? (newValue + (field === 'height_cm' ? ' см' : field === 'weight_kg' ? ' кг' : '')) : '—');
