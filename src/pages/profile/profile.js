@@ -167,11 +167,11 @@ async function loadPublicProfile(page, userId, routerContext) {
     factsEl.innerHTML = [
       renderFact('Потребител', profile.username || '—', isOwnProfile, 'username', 'text', profile.username || ''),
       // Partner 1
-      age1 ? renderFact('Партньор 1 възраст', `${age1} г.`, isOwnProfile, 'partner1_birth_date', 'date', profile.partner1_birth_date || profile.birth_date || '') : '',
-      profile.partner1_gender ? renderFact('Партньор 1 пол', formatGender(profile.partner1_gender), isOwnProfile, 'partner1_gender', 'select', profile.partner1_gender || '') : '',
+      isOwnProfile ? renderFact('Партньор 1 възраст', age1 ? `${age1} г.` : '—', true, 'partner1_birth_date', 'date', profile.partner1_birth_date || profile.birth_date || '') : (age1 ? renderFact('Партньор 1 възраст', `${age1} г.`, false) : ''),
+      isOwnProfile ? renderFact('Партньор 1 пол', formatGender(profile.partner1_gender || ''), true, 'partner1_gender', 'select', profile.partner1_gender || '') : (profile.partner1_gender ? renderFact('Партньор 1 пол', formatGender(profile.partner1_gender)) : ''),
       // Partner 2
-      age2 ? renderFact('Партньор 2 възраст', `${age2} г.`, isOwnProfile, 'partner2_birth_date', 'date', profile.partner2_birth_date || '') : '',
-      profile.partner2_gender ? renderFact('Партньор 2 пол', formatGender(profile.partner2_gender), isOwnProfile, 'partner2_gender', 'select', profile.partner2_gender || '') : '',
+      isOwnProfile ? renderFact('Партньор 2 възраст', age2 ? `${age2} г.` : '—', true, 'partner2_birth_date', 'date', profile.partner2_birth_date || '') : (age2 ? renderFact('Партньор 2 възраст', `${age2} г.`, false) : ''),
+      isOwnProfile ? renderFact('Партньор 2 пол', formatGender(profile.partner2_gender || ''), true, 'partner2_gender', 'select', profile.partner2_gender || '') : (profile.partner2_gender ? renderFact('Партньор 2 пол', formatGender(profile.partner2_gender)) : ''),
       // General info
       renderFact('Град', profile.city || '—', isOwnProfile, 'city', 'text', profile.city || ''),
       renderFact('Ръст', profile.height_cm ? `${profile.height_cm} см` : '—', isOwnProfile, 'height_cm', 'number', profile.height_cm || ''),
