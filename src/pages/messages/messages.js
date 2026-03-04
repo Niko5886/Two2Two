@@ -34,6 +34,7 @@ export function renderMessagesPage() {
   let activeContactProfile = null;
   let conversations = []; // State
   let messageSub = null;
+  const renderedMessageIds = new Set();
 
   // URL param to open a specific chat if routed like /messages?userId=123
   const urlParams = new URLSearchParams(window.location.search);
@@ -196,6 +197,8 @@ export function renderMessagesPage() {
   }
 
   function renderMessagesFlow(msgs) {
+    renderedMessageIds.clear();
+
     if (!msgs.length) {
       messagesFlow.innerHTML = '<div class="text-center text-muted w-100 p-4 mt-5"><i class="bi bi-chat-square-text fs-1 mb-2 d-block"></i> Напиши първото съобщение!</div>';
       return;
@@ -216,56 +219,91 @@ export function renderMessagesPage() {
         lastDate = dateStr;
       }
 
-      html += `
-        <div class="d-flex mb-3 ${isMine ? 'justify-content-end' : 'justify-content-start'}">
-          <div class="message-bubble px-3 py-2 ${isMine ? 'message-sent shadow-sm' : 'message-received shadow-sm border border-secondary border-opacity-25'}">
-            ${escapeHtml(m.content)}
-            <div class="text-end mt-1" style="font-size: 0.65rem; opacity: 0.7;">
-              ${timeStr} ${isMine ? (m.read_at ? '<i class="bi bi-check-all text-info ms-1"></i>' : '<i class="bi bi-check ms-1"></i>') : ''}
-            </div>
-          </div>
-        </div>
-      `;
+      if (m.id) renderedMessageIds.add(m.id);
+      html += buildMessageHtml(m, timeStr);
     });
 
     messagesFlow.innerHTML = html;
     scrollToBottom();
   }
 
+  function buildMessageHtml(message, timeStr = null) {
+    const isMine = message.sender_id === currentUser.id;
+    const safeTime = timeStr || new Date(message.created_at).toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
+    const rowClass = isMine ? 'message-row message-row--mine' : 'message-row message-row--theirs';
+    const bubbleClass = isMine ? 'message-bubble message-bubble--mine' : 'message-bubble message-bubble--theirs';
+    const statusIcon = isMine
+      ? (message._pending
+        ? '<i class="bi bi-clock-history ms-1"></i>'
+        : (message.read_at ? '<i class="bi bi-check-all text-info ms-1"></i>' : '<i class="bi bi-check ms-1"></i>'))
+      : '';
+
+    return `
+      <div class="${rowClass}" data-message-id="${message.id || ''}">
+        <div class="${bubbleClass} ${message._pending ? 'is-pending' : ''}">
+          <div class="message-bubble__content">${escapeHtml(message.content)}</div>
+          <div class="message-bubble__meta">
+            <span>${safeTime}</span>${statusIcon}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function appendMessageToFlow(message) {
+    const existingEmptyStateIcon = messagesFlow.querySelector('.bi-chat-square-text');
+    if (existingEmptyStateIcon) {
+      messagesFlow.innerHTML = '';
+    }
+
+    const msgHtml = buildMessageHtml(message);
+    messagesFlow.insertAdjacentHTML('beforeend', msgHtml);
+    scrollToBottom();
+  }
+
+  function upsertConversationWithMessage(message, isMine) {
+    const relatedContactId = isMine ? message.receiver_id : message.sender_id;
+    let convo = conversations.find(c => c.contact_id === relatedContactId);
+
+    if (!convo) {
+      fetchProfilesByIds([relatedContactId]).then(([profile]) => {
+        conversations = [
+          {
+            contact_id: relatedContactId,
+            profile: profile || { username: 'Неизвестен', id: relatedContactId },
+            last_message_content: message.content,
+            last_message_at: message.created_at,
+            unread_count: isMine || activeContactId === relatedContactId ? 0 : 1
+          },
+          ...conversations
+        ];
+        renderConversations(searchInput.value);
+      }).catch((err) => {
+        console.error(err);
+      });
+      return;
+    }
+
+    convo.last_message_content = message.content;
+    convo.last_message_at = message.created_at;
+    if (!isMine && activeContactId !== relatedContactId) {
+      convo.unread_count = (convo.unread_count || 0) + 1;
+    }
+
+    conversations = [convo, ...conversations.filter(c => c.contact_id !== relatedContactId)];
+    renderConversations(searchInput.value);
+  }
+
   // Handle incoming real-time msg
   function handleRealtimeMessage(newMsg) {
+    if (newMsg?.id && renderedMessageIds.has(newMsg.id)) {
+      return;
+    }
+
     const isMine = newMsg.sender_id === currentUser.id;
     const relatedContactId = isMine ? newMsg.receiver_id : newMsg.sender_id;
 
-    // 1. Update conversations list
-    let convo = conversations.find(c => c.contact_id === relatedContactId);
-    
-    // If it's a new conversation from someone else
-    if (!convo && !isMine) {
-      // Need fetching profile async, for now basic outline
-      fetchProfilesByIds([relatedContactId]).then(([p]) => {
-        if (p) {
-          conversations.unshift({
-            contact_id: relatedContactId,
-            profile: p,
-            last_message_content: newMsg.content,
-            last_message_at: newMsg.created_at,
-            unread_count: 1
-          });
-          renderConversations(searchInput.value);
-        }
-      });
-    } else if (convo) {
-      convo.last_message_content = newMsg.content;
-      convo.last_message_at = newMsg.created_at;
-      if (!isMine && activeContactId !== relatedContactId) {
-        convo.unread_count = (convo.unread_count || 0) + 1;
-      }
-      
-      // Move to top
-      conversations = [convo, ...conversations.filter(c => c.contact_id !== relatedContactId)];
-      renderConversations(searchInput.value);
-    }
+    upsertConversationWithMessage(newMsg, isMine);
 
     // 2. Update active chat flow
     if (activeContactId === relatedContactId) {
@@ -273,27 +311,11 @@ export function renderMessagesPage() {
         markAsRead(activeContactId); // tell backend
       }
 
-      // Remove empty state if present
-      const emptyIndicator = messagesFlow.querySelector('.bi-chat-square-text');
-      if (emptyIndicator) messagesFlow.innerHTML = '';
-
-      const d = new Date(newMsg.created_at);
-      const timeStr = d.toLocaleTimeString('bg-BG', {hour: '2-digit', minute:'2-digit'});
-
-      const msgHtml = `
-        <div class="d-flex mb-3 ${isMine ? 'justify-content-end' : 'justify-content-start'}">
-          <div class="message-bubble px-3 py-2 ${isMine ? 'message-sent shadow-sm' : 'message-received shadow-sm border border-secondary border-opacity-25'}">
-            ${escapeHtml(newMsg.content)}
-            <div class="text-end mt-1" style="font-size: 0.65rem; opacity: 0.7;">
-              ${timeStr} ${isMine ? '<i class="bi bi-check ms-1"></i>' : ''}
-            </div>
-          </div>
-        </div>
-      `;
-      messagesFlow.insertAdjacentHTML('beforeend', msgHtml);
-      scrollToBottom();
+      if (newMsg.id) renderedMessageIds.add(newMsg.id);
+      appendMessageToFlow(newMsg);
     } else if (!isMine) {
       // Toast notification for incoming msg when in another chat
+      const convo = conversations.find(c => c.contact_id === relatedContactId);
       if(convo?.profile?.username) {
         toast.info(`Ново съобщение от ${convo.profile.username}`, { duration: 3000 });
       }
@@ -310,13 +332,47 @@ export function renderMessagesPage() {
 
     msgInput.value = '';
     msgInput.style.height = 'auto'; // reset textarea
+
+    const optimisticId = `local-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const optimisticMessage = {
+      id: optimisticId,
+      sender_id: currentUser.id,
+      receiver_id: activeContactId,
+      content: text,
+      created_at: new Date().toISOString(),
+      read_at: null,
+      _pending: true
+    };
+
+    renderedMessageIds.add(optimisticId);
+    upsertConversationWithMessage(optimisticMessage, true);
+    if (activeContactId === optimisticMessage.receiver_id) {
+      appendMessageToFlow(optimisticMessage);
+    }
     
     try {
-      // Opt: optimistic UI update could go here
-      await sendMessage(activeContactId, text);
-      // Actual UI update happens via Realtime handleRealtimeMessage which triggers since we sent it
+      const savedMessage = await sendMessage(activeContactId, text);
+      renderedMessageIds.delete(optimisticId);
+
+      const optimisticNode = messagesFlow.querySelector(`[data-message-id="${optimisticId}"]`);
+      if (optimisticNode) {
+        optimisticNode.setAttribute('data-message-id', savedMessage.id);
+        const bubble = optimisticNode.querySelector('.message-bubble');
+        bubble?.classList.remove('is-pending');
+        const meta = optimisticNode.querySelector('.message-bubble__meta');
+        if (meta) {
+          const d = new Date(savedMessage.created_at);
+          const timeStr = d.toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
+          meta.innerHTML = `<span>${timeStr}</span><i class="bi bi-check ms-1"></i>`;
+        }
+      }
+
+      renderedMessageIds.add(savedMessage.id);
     } catch (err) {
       toast.error('Неуспешно изпращане', { title: 'Грешка' });
+      renderedMessageIds.delete(optimisticId);
+      const optimisticNode = messagesFlow.querySelector(`[data-message-id="${optimisticId}"]`);
+      optimisticNode?.remove();
       msgInput.value = text; // restore
     }
   });

@@ -353,7 +353,21 @@ function formatChatMessageTime(isoString) {
   return new Date(isoString).toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
 }
 
-function renderProfileChatMessages(flowEl, messages, currentUserId) {
+function getProfileChatMetaHtml(message, isMine) {
+  if (!isMine) {
+    return `<span>${formatChatMessageTime(message.created_at)}</span>`;
+  }
+
+  if (message._pending) {
+    return `<span>${formatChatMessageTime(message.created_at)}</span><i class="bi bi-clock-history"></i>`;
+  }
+
+  return `<span>${formatChatMessageTime(message.created_at)}</span><i class="bi ${message.read_at ? 'bi-check-all' : 'bi-check'}"></i>`;
+}
+
+function renderProfileChatMessages(flowEl, messages, currentUserId, renderedIds = null) {
+  if (renderedIds?.clear) renderedIds.clear();
+
   if (!Array.isArray(messages) || !messages.length) {
     flowEl.innerHTML = '<p class="profile-chat-modal__empty">Няма съобщения. Започнете разговора.</p>';
     return;
@@ -362,11 +376,12 @@ function renderProfileChatMessages(flowEl, messages, currentUserId) {
   flowEl.innerHTML = messages
     .map((msg) => {
       const isMine = msg.sender_id === currentUserId;
+      if (msg.id && renderedIds) renderedIds.add(msg.id);
       return `
-        <div class="profile-chat-modal__row ${isMine ? 'is-mine' : 'is-theirs'}">
-          <div class="profile-chat-modal__bubble">
+        <div class="profile-chat-modal__row ${isMine ? 'is-mine' : 'is-theirs'}" data-message-id="${msg.id || ''}">
+          <div class="profile-chat-modal__bubble ${msg._pending ? 'is-pending' : ''}">
             <p>${escapeHtml(msg.content || '')}</p>
-            <span>${formatChatMessageTime(msg.created_at)}</span>
+            <div class="profile-chat-modal__meta">${getProfileChatMetaHtml(msg, isMine)}</div>
           </div>
         </div>
       `;
@@ -384,10 +399,10 @@ function appendProfileChatMessage(flowEl, msg, currentUserId) {
   flowEl.insertAdjacentHTML(
     'beforeend',
     `
-      <div class="profile-chat-modal__row ${isMine ? 'is-mine' : 'is-theirs'}">
-        <div class="profile-chat-modal__bubble">
+      <div class="profile-chat-modal__row ${isMine ? 'is-mine' : 'is-theirs'}" data-message-id="${msg.id || ''}">
+        <div class="profile-chat-modal__bubble ${msg._pending ? 'is-pending' : ''}">
           <p>${escapeHtml(msg.content || '')}</p>
-          <span>${formatChatMessageTime(msg.created_at)}</span>
+          <div class="profile-chat-modal__meta">${getProfileChatMetaHtml(msg, isMine)}</div>
         </div>
       </div>
     `
@@ -443,6 +458,7 @@ function closeProfileMessageModal(page) {
     page._profileChatSub.unsubscribe();
   }
   page._profileChatSub = null;
+  page._profileChatRenderedMessageIds = null;
 }
 
 async function openProfileMessageModal(page, profileId, profileName, profileStatus) {
@@ -458,6 +474,8 @@ async function openProfileMessageModal(page, profileId, profileName, profileStat
   const flowEl = modal.querySelector('[data-profile-chat-flow]');
   const formEl = modal.querySelector('[data-profile-chat-form]');
   const inputEl = modal.querySelector('[data-profile-chat-input]');
+  const renderedIds = new Set();
+  page._profileChatRenderedMessageIds = renderedIds;
 
   page._profileChatTargetId = profileId;
   titleEl.textContent = `Съобщение до ${profileName}`;
@@ -472,7 +490,7 @@ async function openProfileMessageModal(page, profileId, profileName, profileStat
 
   try {
     const messages = await fetchMessagesWith(profileId);
-    renderProfileChatMessages(flowEl, messages, currentUser.id);
+    renderProfileChatMessages(flowEl, messages, currentUser.id, renderedIds);
     await markAsRead(profileId);
   } catch (error) {
     console.error(error);
@@ -486,6 +504,10 @@ async function openProfileMessageModal(page, profileId, profileName, profileStat
     const mineToTarget = newMsg.sender_id === currentUser.id && newMsg.receiver_id === chatTargetId;
     const targetToMine = newMsg.sender_id === chatTargetId && newMsg.receiver_id === currentUser.id;
     if (!mineToTarget && !targetToMine) return;
+
+    const messageIds = page._profileChatRenderedMessageIds;
+    if (newMsg.id && messageIds?.has(newMsg.id)) return;
+    if (newMsg.id && messageIds) messageIds.add(newMsg.id);
 
     appendProfileChatMessage(flowEl, newMsg, currentUser.id);
     if (targetToMine) {
@@ -510,11 +532,40 @@ async function openProfileMessageModal(page, profileId, profileName, profileStat
 
       inputEl.value = '';
 
+      const optimisticId = `profile-local-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const optimisticMsg = {
+        id: optimisticId,
+        sender_id: currentUser.id,
+        receiver_id: targetId,
+        content,
+        created_at: new Date().toISOString(),
+        read_at: null,
+        _pending: true
+      };
+
+      page._profileChatRenderedMessageIds?.add(optimisticId);
+      appendProfileChatMessage(flowEl, optimisticMsg, currentUser.id);
+
       try {
-        await sendMessage(targetId, content);
+        const saved = await sendMessage(targetId, content);
+        page._profileChatRenderedMessageIds?.delete(optimisticId);
+        if (saved?.id) page._profileChatRenderedMessageIds?.add(saved.id);
+
+        const node = flowEl.querySelector(`[data-message-id="${optimisticId}"]`);
+        if (node) {
+          node.setAttribute('data-message-id', saved.id);
+          const bubble = node.querySelector('.profile-chat-modal__bubble');
+          bubble?.classList.remove('is-pending');
+          const meta = node.querySelector('.profile-chat-modal__meta');
+          if (meta) {
+            meta.innerHTML = `<span>${formatChatMessageTime(saved.created_at)}</span><i class="bi bi-check"></i>`;
+          }
+        }
       } catch (error) {
         console.error(error);
         toast.error('Неуспешно изпращане на съобщение.');
+        page._profileChatRenderedMessageIds?.delete(optimisticId);
+        flowEl.querySelector(`[data-message-id="${optimisticId}"]`)?.remove();
         inputEl.value = content;
       }
     });

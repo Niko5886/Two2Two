@@ -1,10 +1,10 @@
 <div class="messages-container container-xl mt-4 mb-4">
-  <div class="row g-0 h-100 bg-dark rounded-4 border border-secondary shadow-lg overflow-hidden position-relative messages-layout">
+  <div class="row g-0 h-100 rounded-4 border border-secondary shadow-lg overflow-hidden position-relative messages-layout messages-shell">
     
     <!-- Contacts Sidebar (Col 4) -->
-    <div class="col-12 col-md-5 col-lg-4 d-flex flex-column border-end border-secondary bg-opacity-75 contacts-sidebar" id="contactsSidebar">
+    <div class="col-12 col-md-5 col-lg-4 d-flex flex-column border-end border-secondary bg-opacity-75 contacts-sidebar messages-sidebar" id="contactsSidebar">
       <!-- Search & Header -->
-      <div class="p-3 border-bottom border-secondary bg-dark bg-opacity-50">
+      <div class="p-3 border-bottom border-secondary bg-dark bg-opacity-50 messages-sidebar__top">
         <h5 class="mb-3 text-white fw-bold d-flex justify-content-between align-items-center">
           <span><i class="bi bi-chat-dots-fill text-primary me-2"></i>Съобщения</span>
           <!-- Mobile Close Button (shows only when chat open and back on mobile) - Wait, mobile behavior handled by classes -->
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Active Chat Area (Col 8) -->
-    <div class="col-12 col-md-7 col-lg-8 d-flex flex-column bg-gradient-dark position-relative chat-area" id="chatArea">
+    <div class="col-12 col-md-7 col-lg-8 d-flex flex-column bg-gradient-dark position-relative chat-area messages-chat" id="chatArea">
       
       <!-- Empty State / No Chat Selected -->
       <div id="emptyChatState" class="h-100 d-flex flex-column align-items-center justify-content-center text-muted p-4 w-100 position-absolute top-0 start-0 bg-dark z-2">
