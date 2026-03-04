@@ -93,6 +93,43 @@
   line-height: 1.4;
 }
 
+.toast__meta {
+  margin: 0;
+  font-size: 11px;
+  color: #8ea4c6;
+}
+
+.toast__action {
+  margin-top: 8px;
+  width: fit-content;
+  border: 1px solid rgba(143, 186, 255, 0.35);
+  background: rgba(55, 110, 196, 0.24);
+  color: #dce9ff;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1;
+  padding: 7px 12px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.toast__action:hover {
+  background: rgba(71, 132, 230, 0.35);
+  border-color: rgba(155, 196, 255, 0.52);
+}
+
+.toast__avatar-wrap {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.toast__avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .toast__close {
   background: none;
   border: none;

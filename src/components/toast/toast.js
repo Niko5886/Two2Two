@@ -26,14 +26,24 @@ function ensureContainer() {
   return toastContainer;
 }
 
-function createToastElement(type, message, title, duration) {
+function createToastElement(type, message, title, duration, avatarUrl, meta, actionLabel, onAction) {
   const toast = document.createElement('div');
   toast.className = `toast toast--${type}`;
   toast.dataset.toastId = toastIdCounter++;
 
-  const icon = document.createElement('div');
-  icon.className = 'toast__icon';
-  icon.textContent = ICONS[type] || ICONS.info;
+  const visual = document.createElement('div');
+  visual.className = 'toast__icon';
+
+  if (avatarUrl) {
+    visual.classList.add('toast__avatar-wrap');
+    const avatar = document.createElement('img');
+    avatar.className = 'toast__avatar';
+    avatar.src = avatarUrl;
+    avatar.alt = 'avatar';
+    visual.appendChild(avatar);
+  } else {
+    visual.textContent = ICONS[type] || ICONS.info;
+  }
 
   const content = document.createElement('div');
   content.className = 'toast__content';
@@ -49,13 +59,32 @@ function createToastElement(type, message, title, duration) {
   content.appendChild(titleEl);
   content.appendChild(messageEl);
 
+  if (meta) {
+    const metaEl = document.createElement('p');
+    metaEl.className = 'toast__meta';
+    metaEl.textContent = meta;
+    content.appendChild(metaEl);
+  }
+
+  if (actionLabel && typeof onAction === 'function') {
+    const actionBtn = document.createElement('button');
+    actionBtn.className = 'toast__action';
+    actionBtn.type = 'button';
+    actionBtn.textContent = actionLabel;
+    actionBtn.onclick = () => {
+      onAction();
+      removeToast(toast);
+    };
+    content.appendChild(actionBtn);
+  }
+
   const closeBtn = document.createElement('button');
   closeBtn.className = 'toast__close';
   closeBtn.innerHTML = '×';
   closeBtn.setAttribute('aria-label', 'Затвори');
   closeBtn.onclick = () => removeToast(toast);
 
-  toast.appendChild(icon);
+  toast.appendChild(visual);
   toast.appendChild(content);
   toast.appendChild(closeBtn);
 
@@ -86,11 +115,15 @@ export function showToast(message, options = {}) {
   const {
     type = 'info',
     title = null,
-    duration = 4000
+    duration = 4000,
+    avatarUrl = null,
+    meta = null,
+    actionLabel = null,
+    onAction = null
   } = options;
 
   const container = ensureContainer();
-  const toast = createToastElement(type, message, title, duration);
+  const toast = createToastElement(type, message, title, duration, avatarUrl, meta, actionLabel, onAction);
   container.appendChild(toast);
 
   return toast;
