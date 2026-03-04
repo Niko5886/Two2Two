@@ -1,6 +1,7 @@
 import './dialog.css';
 
 let dialogHost = null;
+const DIALOG_ANIMATION_MS = 220;
 
 function ensureDialogHost() {
   if (dialogHost) return dialogHost;
@@ -23,6 +24,24 @@ function ensureDialogHost() {
 
   document.body.appendChild(dialogHost);
   return dialogHost;
+}
+
+function showDialogHost(host) {
+  host.hidden = false;
+  requestAnimationFrame(() => {
+    host.classList.add('app-dialog--visible');
+  });
+}
+
+function hideDialogHost(host) {
+  host.classList.remove('app-dialog--visible');
+
+  return new Promise((resolve) => {
+    window.setTimeout(() => {
+      host.hidden = true;
+      resolve();
+    }, DIALOG_ANIMATION_MS);
+  });
 }
 
 function openDialog({
@@ -59,12 +78,13 @@ function openDialog({
     inputEl.value = '';
   }
 
-  host.hidden = false;
+  showDialogHost(host);
 
   return new Promise((resolve) => {
-    const close = (result) => {
+    const close = async (result) => {
       host.removeEventListener('click', handleClick);
-      host.hidden = true;
+      window.removeEventListener('keydown', handleEscape);
+      await hideDialogHost(host);
       resolve(result);
     };
 
@@ -88,7 +108,13 @@ function openDialog({
       }
     };
 
+    const handleEscape = (event) => {
+      if (event.key !== 'Escape') return;
+      close(mode === 'confirm' ? false : null);
+    };
+
     host.addEventListener('click', handleClick);
+    window.addEventListener('keydown', handleEscape);
 
     if (mode === 'prompt') {
       setTimeout(() => inputEl.focus(), 10);
