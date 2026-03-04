@@ -4,7 +4,9 @@ A modern web application designed for adult couples seeking to connect with othe
 
 ## 🌐 Live Demo
 
-**Deployment URL:** [https://couple2couple.netlify.app](https://couple2couple.netlify.app)
+**Deployment URL:** [https://couplecouple.netlify.app](https://couplecouple.netlify.app)
+
+> **📝 Deployment Guide:** See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
 
 ### Demo Credentials
 
