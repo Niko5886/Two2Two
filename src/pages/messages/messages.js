@@ -224,7 +224,7 @@ export function renderMessagesPage() {
     });
 
     messagesFlow.innerHTML = html;
-    scrollToBottom();
+    scrollToBottom(true);
   }
 
   function buildMessageHtml(message, timeStr = null) {
@@ -232,6 +232,11 @@ export function renderMessagesPage() {
     const safeTime = timeStr || new Date(message.created_at).toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
     const rowClass = isMine ? 'message-row message-row--mine' : 'message-row message-row--theirs';
     const bubbleClass = isMine ? 'message-bubble message-bubble--mine' : 'message-bubble message-bubble--theirs';
+    // Remove extra whitespace before escaping
+    const normalizedContent = normalizeMessageContent(message.content);
+    
+    // Check if empty after normalization? No, already guaranteed string.
+
     const statusIcon = isMine
       ? (message._pending
         ? '<i class="bi bi-clock-history ms-1"></i>'
@@ -241,7 +246,7 @@ export function renderMessagesPage() {
     return `
       <div class="${rowClass}" data-message-id="${message.id || ''}">
         <div class="${bubbleClass} ${message._pending ? 'is-pending' : ''}">
-          <div class="message-bubble__content">${escapeHtml(message.content)}</div>
+          <div class="message-bubble__content">${escapeHtml(normalizedContent)}</div>
           <div class="message-bubble__meta">
             <span>${safeTime}</span>${statusIcon}
           </div>
@@ -258,10 +263,11 @@ export function renderMessagesPage() {
 
     const msgHtml = buildMessageHtml(message);
     messagesFlow.insertAdjacentHTML('beforeend', msgHtml);
-    scrollToBottom();
+    scrollToBottom(true);
   }
 
   function upsertConversationWithMessage(message, isMine) {
+    const normalizedContent = normalizeMessageContent(message.content);
     const relatedContactId = isMine ? message.receiver_id : message.sender_id;
     let convo = conversations.find(c => c.contact_id === relatedContactId);
 
@@ -271,7 +277,7 @@ export function renderMessagesPage() {
           {
             contact_id: relatedContactId,
             profile: profile || { username: 'Неизвестен', id: relatedContactId },
-            last_message_content: message.content,
+            last_message_content: normalizedContent,
             last_message_at: message.created_at,
             unread_count: isMine || activeContactId === relatedContactId ? 0 : 1
           },
@@ -284,7 +290,7 @@ export function renderMessagesPage() {
       return;
     }
 
-    convo.last_message_content = message.content;
+    convo.last_message_content = normalizedContent;
     convo.last_message_at = message.created_at;
     if (!isMine && activeContactId !== relatedContactId) {
       convo.unread_count = (convo.unread_count || 0) + 1;
@@ -401,10 +407,12 @@ export function renderMessagesPage() {
     layout.classList.remove('chat-active');
   });
 
-  function scrollToBottom() {
-    messagesFlow.scrollTo({
-      top: messagesFlow.scrollHeight,
-      behavior: 'smooth'
+  function scrollToBottom(force = false) {
+    requestAnimationFrame(() => {
+      messagesFlow.scrollTo({
+        top: messagesFlow.scrollHeight,
+        behavior: force ? 'auto' : 'smooth'
+      });
     });
   }
 
@@ -415,6 +423,24 @@ export function renderMessagesPage() {
          .replace(/>/g, "&gt;")
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
+  }
+
+  function normalizeMessageContent(content) {
+    if (!content) return '';
+    
+    return String(content)
+      .replace(/\r/g, '') // Remove CR
+      .split('\n') // Split by LF
+      .map(line => line.trim()) // Trim every line (removes indentation and trailing spaces)
+      .filter((line, index, lines) => {
+        // Always keep lines with text
+        if (line.length > 0) return true;
+        // Keep an empty line only if the previous line was NOT empty (max 1 consecutive empty line)
+        if (index > 0 && lines[index - 1].length > 0) return true;
+        return false;
+      })
+      .join('\n')
+      .trim(); // Remove leading/trailing newlines from the final result
   }
 
   // Cleanup on unmount

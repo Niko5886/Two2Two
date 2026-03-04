@@ -1,6 +1,7 @@
 .messages-container {
-  height: calc(100vh - 100px);
-  max-height: 900px;
+  height: clamp(460px, calc(100vh - 190px), 860px);
+  max-height: none;
+  min-height: 0;
 }
 
 .messages-layout {
@@ -16,6 +17,8 @@
 
 .messages-sidebar {
   background: rgba(16, 24, 36, 0.78);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .messages-sidebar__top {
@@ -26,6 +29,7 @@
 .messages-chat {
   background: linear-gradient(180deg, rgba(13, 21, 33, 0.9), rgba(8, 14, 24, 0.9));
   min-height: 0;
+  overflow: hidden;
 }
 
 .empty-chat-icon-wrap {
@@ -72,6 +76,11 @@
 #messagesFlow {
   min-height: 0;
   overflow-y: auto;
+  padding-bottom: 1rem !important;
+}
+
+.contacts-list {
+  min-height: 0;
 }
 
 .contact-item {
@@ -98,7 +107,8 @@
 /* Chat Bubbles */
 .message-row {
   display: flex;
-  margin-bottom: 0.45rem;
+  align-items: flex-end; /* Prevent bubble from stretching vertically */
+  margin-bottom: 0.32rem;
 }
 
 .message-row--mine {
@@ -110,14 +120,16 @@
 }
 
 .message-bubble {
-  max-width: 64%;
-  word-wrap: break-word;
-  white-space: pre-wrap;
+  max-width: 52%;
+  width: fit-content; /* Ensure bubble fits content and doesn't expand unnecessarily */
+  word-wrap: break-word; /* Legacy */
+  overflow-wrap: break-word; /* Modern */
+  white-space: pre-wrap; /* Use pre-wrap to preserve newlines but collapse spaces - wait, pre-line is better for collapsing */
   position: relative;
-  font-size: 0.87rem;
-  padding: 0.54rem 0.7rem 0.38rem;
+  font-size: 0.82rem;
+  padding: 0.38rem 0.52rem 0.24rem;
   border-radius: 16px;
-  box-shadow: 0 7px 14px rgba(5, 11, 19, 0.28);
+  box-shadow: 0 6px 12px rgba(5, 11, 19, 0.24);
   border: 1px solid transparent;
 }
 
@@ -127,8 +139,8 @@
 }
 
 .message-bubble__meta {
-  margin-top: 0.2rem;
-  font-size: 0.62rem;
+  margin-top: 0.12rem;
+  font-size: 0.56rem;
   opacity: 0.82;
   display: flex;
   align-items: center;
@@ -195,6 +207,10 @@
 
   .message-bubble {
     max-width: 84%;
+  }
+
+  .messages-container {
+    height: calc(100vh - 118px);
   }
 }
 
