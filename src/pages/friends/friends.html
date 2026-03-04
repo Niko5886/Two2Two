@@ -1,0 +1,28 @@
+<section class="friends-page">
+  <div class="container-xl py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="text-white mb-0">
+        <i class="bi bi-people-fill text-primary me-2"></i>
+        Моите приятели
+      </h2>
+      <span class="badge bg-primary bg-opacity-75" data-friends-count>0</span>
+    </div>
+
+    <div class="friends-grid" data-friends-grid>
+      <!-- Friends will be loaded here -->
+      <div class="loading-message text-center text-muted p-5">
+        <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+        <p>Зареждане на приятели...</p>
+      </div>
+    </div>
+
+    <div class="no-friends-message text-center text-muted p-5" hidden>
+      <i class="bi bi-emoji-frown fs-1 mb-3 d-block opacity-50"></i>
+      <h5>Все още нямате приятели</h5>
+      <p>Разгледайте потребителите и добавете приятели.</p>
+      <a href="/users" class="btn btn-primary mt-3">
+        <i class="bi bi-search me-2"></i>Разгледай потребители
+      </a>
+    </div>
+  </div>
+</section>

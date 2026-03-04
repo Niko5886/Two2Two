@@ -5,6 +5,7 @@ import { renderRegisterPage } from '../pages/register/register.js';
 import { renderAdminPage } from '../pages/admin/admin.js';
 import { renderPublicProfilePage } from '../pages/profile/profile.js';
 import { renderMessagesPage } from '../pages/messages/messages.js';
+import { renderFriendsPage } from '../pages/friends/friends.js';
 
 export const appRoutes = [
   {
@@ -43,7 +44,13 @@ export const appRoutes = [
     requiredRole: null 
   },
   { path: '/search', implemented: false, protected: true, requiredRole: null },
-  { path: '/friends', implemented: false, protected: true, requiredRole: null },
+  { 
+    path: '/friends', 
+    render: renderFriendsPage,
+    implemented: true, 
+    protected: true, 
+    requiredRole: null 
+  },
   {
     path: '/admin',
     render: renderAdminPage,

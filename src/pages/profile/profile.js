@@ -4,6 +4,7 @@ import toast from '../../components/toast/toast.js';
 import { showConfirm } from '../../components/dialog/dialog.js';
 import { fetchProfileWithPhotos, calculateAge, formatLastSeen, updateProfile, uploadProfilePhoto, deletePhoto } from '../../services/profileService.js';
 import { fetchMessagesWith, sendMessage, markAsRead, subscribeToMessages } from '../../services/messageService.js';
+import { addFriend, removeFriend, areFriends } from '../../services/friendService.js';
 import { getAuthUser } from '../../services/authState.js';
 import { router } from '../../router/router.js';
 
@@ -574,7 +575,7 @@ async function openProfileMessageModal(page, profileId, profileName, profileStat
   setTimeout(() => inputEl.focus(), 20);
 }
 
-function setupActions(page, profileName, profileStatus, isOwnProfile, profileId) {
+async function setupActions(page, profileName, profileStatus, isOwnProfile, profileId, isFriend = false) {
   const actionsSection = page.querySelector('[data-actions-section]');
   if (actionsSection) {
     if (isOwnProfile) {
@@ -584,7 +585,22 @@ function setupActions(page, profileName, profileStatus, isOwnProfile, profileId)
     actionsSection.hidden = false;
   }
 
-  page.addEventListener('click', (event) => {
+  // Update friend button state
+  const friendBtn = page.querySelector('[data-action="friend"]');
+  if (friendBtn) {
+    friendBtn.dataset.isFriend = isFriend ? 'true' : 'false';
+    if (isFriend) {
+      friendBtn.innerHTML = '<i class="bi bi-person-check me-1"></i>Премахни приятел';
+      friendBtn.classList.remove('btn-outline-info');
+      friendBtn.classList.add('btn-outline-danger');
+    } else {
+      friendBtn.innerHTML = '<i class="bi bi-person-plus me-1"></i>Добави приятел';
+      friendBtn.classList.remove('btn-outline-danger');
+      friendBtn.classList.add('btn-outline-info');
+    }
+  }
+
+  page.addEventListener('click', async (event) => {
       const btn = event.target.closest('[data-action]');
       const action = btn?.dataset?.action;
       if (!action) return;
@@ -592,11 +608,54 @@ function setupActions(page, profileName, profileStatus, isOwnProfile, profileId)
       if (action === 'message') {
         openProfileMessageModal(page, profileId, profileName, profileStatus);
     } else if (action === 'friend') {
-      toast.info('Добавянето в приятели ще се свърже в следваща стъпка.', { title: `Приятелство с ${profileName}` });
+      await handleFriendToggle(page, btn, profileId, profileName);
     } else if (action === 'like') {
       toast.success('Профилът е харесан.', { title: 'Харесване' });
     }
   });
+}
+
+async function handleFriendToggle(page, btn, friendId, friendName) {
+  const currentUser = getAuthUser();
+  if (!currentUser) {
+    router.navigate('/login');
+    return;
+  }
+
+  const isAdding = !btn.dataset.isFriend || btn.dataset.isFriend === 'false';
+  
+  try {
+    if (isAdding) {
+      btn.disabled = true;
+      await addFriend(friendId);
+      btn.dataset.isFriend = 'true';
+      btn.innerHTML = '<i class="bi bi-person-check me-1"></i>Премахни приятел';
+      btn.classList.remove('btn-outline-info');
+      btn.classList.add('btn-outline-danger');
+      toast.success(`${friendName} е добавен/а в приятели!`, { title: 'Приятелство' });
+    } else {
+      const confirmed = await showConfirm(
+        `Сигурни ли сте, че искате да премахнете ${friendName} от приятели?`,
+        { title: 'Премахване на приятел' }
+      );
+      
+      if (!confirmed) return;
+      
+      btn.disabled = true;
+      await removeFriend(friendId);
+      btn.dataset.isFriend = 'false';
+      btn.innerHTML = '<i class="bi bi-person-plus me-1"></i>Добави приятел';
+      btn.classList.remove('btn-outline-danger');
+      btn.classList.add('btn-outline-info');
+      toast.info(`${friendName} е премахнат/а от приятели.`, { title: 'Приятелство' });
+    }
+  } catch (error) {
+    console.error(error);
+    const msg = error.message || 'Грешка при обработка на приятелство';
+    toast.error(msg, { title: 'Грешка' });
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function getEighteenYearsAgoString() {
@@ -700,7 +759,18 @@ async function loadPublicProfile(page, userId, routerContext) {
     });
     
     const profileStatus = profile.is_online ? 'Онлайн' : formatLastSeen(profile.last_seen_at);
-    setupActions(page, profileName, profileStatus, isOwnProfile, userId);
+    
+    // Check if users are friends (only if viewing someone else's profile)
+    let isFriend = false;
+    if (!isOwnProfile && currentUser) {
+      try {
+        isFriend = await areFriends(currentUser.id, userId);
+      } catch (error) {
+        console.error('Error checking friendship status:', error);
+      }
+    }
+    
+    await setupActions(page, profileName, profileStatus, isOwnProfile, userId, isFriend);
     
     if (isOwnProfile) {
       addPhotoBtn.hidden = false;
