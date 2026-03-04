@@ -69,6 +69,12 @@ export async function markAsRead(senderId) {
     .is('read_at', null);
 
   if (error) console.error('Failed to mark as read:', error);
+
+  if (!error) {
+    window.dispatchEvent(new CustomEvent('messages:read-updated', {
+      detail: { senderId }
+    }));
+  }
 }
 
 /**

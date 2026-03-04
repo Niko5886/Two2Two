@@ -62,6 +62,11 @@ async function handleIncomingMessage(newMsg) {
   if (!currentUser) return;
 
   if (!newMsg || newMsg.receiver_id !== currentUser.id) return;
+
+  window.dispatchEvent(new CustomEvent('messages:incoming', {
+    detail: { message: newMsg }
+  }));
+
   if (notifiedMessageIds.has(newMsg.id)) return;
   notifiedMessageIds.add(newMsg.id);
 

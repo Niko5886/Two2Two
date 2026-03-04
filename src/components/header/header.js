@@ -3,6 +3,56 @@ import headerTemplate from './header.html?raw';
 import { getAuthUser, onAuthStateChange, userHasRole } from '../../services/authState.js';
 import { signOut } from '../../services/supabaseClient.js';
 import { fetchProfile } from '../../services/profileService.js';
+import { fetchConversations } from '../../services/messageService.js';
+
+const unreadBadgeElements = new Set();
+let unreadListenersBound = false;
+
+function setUnreadBadgeValue(badgeElement, count = 0) {
+  if (!badgeElement) return;
+
+  const safeCount = Math.max(0, Number(count) || 0);
+  badgeElement.textContent = safeCount > 99 ? '99+' : String(safeCount);
+  badgeElement.hidden = safeCount <= 0;
+}
+
+function renderUnreadCount(count = 0) {
+  unreadBadgeElements.forEach((badgeElement) => {
+    if (!badgeElement?.isConnected) {
+      unreadBadgeElements.delete(badgeElement);
+      return;
+    }
+
+    setUnreadBadgeValue(badgeElement, count);
+  });
+}
+
+async function refreshUnreadBadges() {
+  const user = getAuthUser();
+  if (!user) {
+    renderUnreadCount(0);
+    return;
+  }
+
+  try {
+    const conversations = await fetchConversations();
+    const totalUnread = (conversations || []).reduce((sum, convo) => sum + (Number(convo.unread_count) || 0), 0);
+    renderUnreadCount(totalUnread);
+  } catch (error) {
+    console.error('Failed to refresh unread badge:', error);
+  }
+}
+
+function bindUnreadListenersOnce() {
+  if (unreadListenersBound) return;
+  unreadListenersBound = true;
+
+  window.addEventListener('messages:incoming', refreshUnreadBadges);
+  window.addEventListener('messages:read-updated', refreshUnreadBadges);
+  onAuthStateChange(() => {
+    refreshUnreadBadges();
+  });
+}
 
 export function createHeader(router, activePath) {
   const wrapper = document.createElement('div');
@@ -14,6 +64,13 @@ export function createHeader(router, activePath) {
   const links = wrapper.querySelectorAll('[data-nav-link]');
   const authActions = wrapper.querySelector('[data-auth-actions]');
   const profileEditLink = wrapper.querySelector('[data-profile-edit]');
+  const unreadMessagesBadge = wrapper.querySelector('[data-unread-messages]');
+
+  if (unreadMessagesBadge) {
+    unreadBadgeElements.add(unreadMessagesBadge);
+    setUnreadBadgeValue(unreadMessagesBadge, 0);
+  }
+  bindUnreadListenersOnce();
 
   // Handle regular navigation links
   links.forEach((link) => {
@@ -182,6 +239,7 @@ export function createHeader(router, activePath) {
   // Initialize auth actions immediately with current user
   const currentUser = getAuthUser();
   updateAuthActions(currentUser);
+  refreshUnreadBadges();
 
   // Subscribe to auth state changes for future updates
   onAuthStateChange((user) => {
